@@ -1,0 +1,220 @@
+/* ---------------------------------------------------------------------------
+   Fonts
+   --------------------------------------------------------------------------- */
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('/assets/fonts/lora-normal-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('/assets/fonts/lora-italic-400.woff2') format('woff2');
+}
+
+/* ---------------------------------------------------------------------------
+   Theme
+
+   `color-scheme: light dark` is what makes the default state follow the
+   browser/OS preference with no JavaScript at all. It also makes native
+   scrollbars, form controls and text selection match the theme.
+
+   light-dark() then resolves every colour against whichever scheme is active,
+   so there is exactly one palette block instead of a `:root` + media-query pair.
+   The [data-theme] rules only narrow color-scheme to a single value; they never
+   redeclare a colour.
+
+   Every foreground/background pair below is >= 4.5:1 (WCAG AA).
+   --------------------------------------------------------------------------- */
+:root {
+  color-scheme: light dark;
+
+  --bg:        light-dark(#faf8f5, #1c1a18);
+  --surface:   light-dark(#f0ece4, #252320);
+  --text:      light-dark(#26221e, #d8d4cc);  /* 15.1:1 / 11.9:1 */
+  --secondary: light-dark(#6b6459, #9a9287);  /*  5.6:1 /  5.7:1 */
+  --link:      light-dark(#7a6420, #b89d4a);  /*  5.4:1 /  6.6:1 */
+  --border:    light-dark(#e3ddd2, #34302b);
+  --focus:     light-dark(#7a6420, #d3b657);
+
+  --font: 'Lora', Georgia, 'Times New Roman', serif;
+  --measure: 38rem;
+}
+
+:root[data-theme='light'] { color-scheme: light; }
+:root[data-theme='dark']  { color-scheme: dark; }
+
+/* ---------------------------------------------------------------------------
+   Base
+   --------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; padding: 0; }
+
+html {
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font);
+  font-size: 1.125rem;
+  line-height: 1.7;
+  color: var(--text);
+  background: var(--bg);
+  overflow-x: clip;
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  padding: 2rem 1.5rem 3rem;
+  max-width: calc(var(--measure) + 3rem);
+  margin-inline: auto;
+  text-rendering: optimizeLegibility;
+}
+
+:where(a) {
+  color: var(--link);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  transition: opacity 0.2s;
+}
+:where(a):hover { opacity: 0.75; }
+
+/* One consistent, high-contrast focus ring on every interactive element,
+   rather than only on the contact button. */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+h1, h2, h3 {
+  line-height: 1.25;
+  font-weight: 600;
+  text-wrap: balance;
+}
+h1 { font-size: 1.75rem; }
+h2 { font-size: 1.35rem; }
+h3 { font-size: 1.15rem; }
+
+p, ul, ol, pre, blockquote, figure { margin-bottom: 1.1rem; }
+ul, ol { padding-left: 1.4rem; }
+li { margin-bottom: 0.4rem; }
+p { text-wrap: pretty; }
+
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2.5rem 0;
+}
+
+blockquote {
+  border-left: 2px solid var(--border);
+  padding-left: 1rem;
+  color: var(--secondary);
+  font-style: italic;
+}
+
+iframe, video, img { max-width: 100%; height: auto; }
+
+/* ---------------------------------------------------------------------------
+   Code
+   --------------------------------------------------------------------------- */
+code, pre, kbd, samp {
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+:not(pre) > code {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+  font-size: 0.85em;
+  word-break: break-word;
+}
+
+pre {
+  padding: 0.9rem 1rem;
+  overflow-x: auto;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  font-size: 0.85rem;
+  line-height: 1.55;
+  tab-size: 2;
+}
+pre code { background: none; border: none; padding: 0; font-size: inherit; }
+
+/* Shiki emits its dark palette as inline `--shiki-dark*` custom properties, so
+   light-dark() can't reach it — these are the only rules that have to restate
+   the "system preference unless overridden" logic by hand. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .astro-code,
+  :root:not([data-theme='light']) .astro-code span {
+    color: var(--shiki-dark) !important;
+    background-color: var(--shiki-dark-bg) !important;
+    font-style: var(--shiki-dark-font-style) !important;
+    font-weight: var(--shiki-dark-font-weight) !important;
+    text-decoration: var(--shiki-dark-text-decoration) !important;
+  }
+}
+:root[data-theme='dark'] .astro-code,
+:root[data-theme='dark'] .astro-code span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+  font-style: var(--shiki-dark-font-style) !important;
+  font-weight: var(--shiki-dark-font-weight) !important;
+  text-decoration: var(--shiki-dark-text-decoration) !important;
+}
+
+/* ---------------------------------------------------------------------------
+   Layout primitives
+   --------------------------------------------------------------------------- */
+main { flex: 1; }
+
+.skip-link {
+  position: absolute;
+  left: 0.5rem;
+  top: 0.5rem;
+  padding: 0.5rem 0.9rem;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transform: translateY(-200%);
+  transition: transform 0.15s;
+  z-index: 100;
+}
+.skip-link:focus-visible { transform: translateY(0); opacity: 1; }
+
+.site-footer {
+  margin-top: 4rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+  color: var(--secondary);
+  font-size: 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.site-footer a { color: var(--secondary); }
+
+time, small { color: var(--secondary); font-size: 0.9rem; }
+
+/* ---------------------------------------------------------------------------
+   Motion
+   --------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

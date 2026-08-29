@@ -1,0 +1,83 @@
+---
+/*
+  Contact disclosure.
+
+  Two changes from the Jekyll version:
+  - The old markup put role="menu" on a container with no menuitem children,
+    which is invalid ARIA. This is a plain disclosure instead: a button with
+    aria-expanded + aria-controls and no menu roles.
+  - It lived as an unlabelled floating dot in the page corner. It now sits in
+    the footer with a visible "Contact" label, so it is discoverable and
+    appears on every page rather than only the home page.
+
+  The address is still assembled at runtime to deter scrapers.
+*/
+---
+<div class="contact">
+  <button
+    id="contact-toggle"
+    type="button"
+    aria-expanded="false"
+    aria-controls="contact-panel"
+  >Contact</button>
+  <span id="contact-panel" class="contact-panel" hidden>
+    <span class="contact-label">Want to message me?</span>
+    <span class="contact-email"></span>
+  </span>
+</div>
+
+<style>
+  .contact { display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; }
+
+  #contact-toggle {
+    font: inherit;
+    font-size: 0.85rem;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--secondary);
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+  /* No transition on colour/border here. Any property fed by light-dark()
+     keeps its stale value when color-scheme flips, because the browser does
+     not treat a color-scheme change as an animatable value change — the
+     button would stay painted in the previous theme's colour. Hover is an
+     instant swap instead. */
+  #contact-toggle:hover { color: var(--link); }
+
+  .contact-panel { display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
+  .contact-panel[hidden] { display: none; }
+  .contact-label { color: var(--secondary); font-size: 0.8rem; font-style: italic; }
+  .contact-email { color: var(--link); font-size: 0.85rem; user-select: all; }
+</style>
+
+<script>
+  const toggle = document.getElementById('contact-toggle');
+  const panel = document.getElementById('contact-panel');
+
+  if (toggle && panel) {
+    toggle.addEventListener('click', () => {
+      const open = toggle.getAttribute('aria-expanded') === 'true';
+      toggle.setAttribute('aria-expanded', String(!open));
+      panel.hidden = open;
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
+        toggle.setAttribute('aria-expanded', 'false');
+        panel.hidden = true;
+        toggle.focus();
+      }
+    });
+
+    const email = panel.querySelector('.contact-email');
+    if (email) {
+      const u = 'yes.upgrade887';
+      const d = 'passinbox.com';
+      email.textContent = `${u}@${d}`;
+    }
+  }
+</script>

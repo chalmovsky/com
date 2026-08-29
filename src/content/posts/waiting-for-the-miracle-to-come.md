@@ -1,7 +1,7 @@
 ---
-layout: post
 title: "Waiting for the Miracle to Come"
 date: 2026-02-15
+description: "On the feeling that the real life is still coming — and the bargain you strike with yourself by never fully committing."
 ---
 
 You may be aware of a certain feeling. It tells you: the real life is coming.

@@ -1,7 +1,7 @@
 ---
-layout: post
 title: "Samsung Magician disk utility takes 18 steps and two Recovery Mode reboots to uninstall"
 date: 2026-03-29
+description: "A disk utility with no uninstaller, 500 failed chown calls, an embedded Electron runtime, and four kernel extensions that survive sudo rm -rf."
 ---
 
 Every time I utter the phrase "Samsung Magician," a fully formed plan for reinstating the

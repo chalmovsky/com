@@ -1,0 +1,53 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = 'Writings from (and often to) Chalmovský' } = Astro.props;
+const SITE_TITLE = 'Chalmovský';
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const pageTitle = title === SITE_TITLE ? SITE_TITLE : `${title} | ${SITE_TITLE}`;
+---
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{pageTitle}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+
+<link rel="icon" type="image/png" sizes="96x96" href="/assets/favicon-96x96.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
+
+{/* jekyll-feed published here; keeping the exact path so existing subscribers survive. */}
+<link rel="alternate" type="application/rss+xml" title={SITE_TITLE} href="/feed.xml" />
+<link rel="sitemap" href="/sitemap-index.xml" />
+
+<link
+  rel="preload"
+  as="font"
+  type="font/woff2"
+  href="/assets/fonts/lora-normal-400.woff2"
+  crossorigin
+/>
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content={SITE_TITLE} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={new URL('/assets/chalmovsky-200.png', Astro.site)} />
+<meta name="twitter:card" content="summary" />
+
+{/*
+  Applies a stored theme override before first paint, so an override never
+  flashes the wrong colours. Absent an override nothing runs and the CSS
+  `color-scheme: light dark` follows the browser preference on its own.
+*/}
+<script is:inline>
+  try {
+    const t = localStorage.getItem('theme');
+    if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+  } catch {}
+</script>

@@ -1,0 +1,106 @@
+---
+/*
+  Tri-state theme control: System -> Light -> Dark -> System.
+
+  "System" is a real, reachable state rather than an implicit starting point,
+  so a visitor can always hand control back to their browser preference. In
+  that state no `data-theme` attribute is set and the CSS `color-scheme:
+  light dark` does the work, including reacting live to an OS change.
+*/
+---
+<button id="theme-toggle" type="button" data-mode="system" aria-label="Theme: system">
+  <svg class="i i-system" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <rect x="2.5" y="4" width="19" height="13" rx="1.5" /><path d="M8.5 20.5h7M12 17.5v3" />
+  </svg>
+  <svg class="i i-light" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <circle cx="12" cy="12" r="4.2" />
+    <path d="M12 1.8v2.6M12 19.6v2.6M22.2 12h-2.6M4.4 12H1.8M19.2 4.8l-1.9 1.9M6.7 17.3l-1.9 1.9M19.2 19.2l-1.9-1.9M6.7 6.7L4.8 4.8" />
+  </svg>
+  <svg class="i i-dark" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path d="M20.5 14.3A8.7 8.7 0 1 1 9.7 3.5a7.2 7.2 0 0 0 10.8 10.8Z" />
+  </svg>
+</button>
+
+<style>
+  #theme-toggle {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--secondary);
+    cursor: pointer;
+  }
+  /* No transition on colour/border here. Any property fed by light-dark()
+     keeps its stale value when color-scheme flips, because the browser does
+     not treat a color-scheme change as an animatable value change — the
+     button would stay painted in the previous theme's colour. Hover is an
+     instant swap instead. */
+  #theme-toggle:hover { color: var(--link); border-color: var(--link); }
+
+  .i {
+    width: 1.05rem;
+    height: 1.05rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    display: none;
+  }
+  #theme-toggle[data-mode='system'] .i-system,
+  #theme-toggle[data-mode='light'] .i-light,
+  #theme-toggle[data-mode='dark'] .i-dark { display: block; }
+</style>
+
+<script>
+  const MODES = ['system', 'light', 'dark'] as const;
+  type Mode = (typeof MODES)[number];
+
+  const DESCRIPTION: Record<Mode, string> = {
+    system: 'system (follows your browser)',
+    light: 'light',
+    dark: 'dark',
+  };
+
+  const button = document.getElementById('theme-toggle');
+  if (button) {
+    const read = (): Mode => {
+      try {
+        const stored = localStorage.getItem('theme');
+        if (stored === 'light' || stored === 'dark') return stored;
+      } catch {}
+      return 'system';
+    };
+
+    const apply = (mode: Mode) => {
+      if (mode === 'system') {
+        delete document.documentElement.dataset.theme;
+      } else {
+        document.documentElement.dataset.theme = mode;
+      }
+      try {
+        if (mode === 'system') localStorage.removeItem('theme');
+        else localStorage.setItem('theme', mode);
+      } catch {}
+
+      const next = MODES[(MODES.indexOf(mode) + 1) % MODES.length];
+      button.dataset.mode = mode;
+      // The accessible name carries both the current state and what activating
+      // will do, since the icon alone conveys neither to a screen reader.
+      button.setAttribute(
+        'aria-label',
+        `Theme: ${DESCRIPTION[mode]}. Activate to switch to ${DESCRIPTION[next]}.`,
+      );
+    };
+
+    apply(read());
+    button.addEventListener('click', () => {
+      const current = (button.dataset.mode ?? 'system') as Mode;
+      apply(MODES[(MODES.indexOf(current) + 1) % MODES.length]);
+    });
+  }
+</script>

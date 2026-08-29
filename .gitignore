@@ -1,8 +1,6 @@
-_site
-.sass-cache
-.jekyll-cache
-.jekyll-metadata
-vendor
+dist
+.astro
+node_modules
 .idea
 .claude
 .DS_Store
