@@ -41,6 +41,19 @@ const pageTitle = title === SITE_TITLE ? SITE_TITLE : `${title} | ${SITE_TITLE}`
 <meta name="twitter:card" content="summary" />
 
 {/*
+  GoatCounter. Cookieless, so no consent banner. Only emitted in production
+  builds — otherwise every `astro dev` reload would count as a pageview.
+*/}
+{import.meta.env.PROD && (
+  <script
+    is:inline
+    data-goatcounter="https://chalmovsky.goatcounter.com/count"
+    async
+    src="https://gc.zgo.at/count.js"
+  ></script>
+)}
+
+{/*
   Applies a stored theme override before first paint, so an override never
   flashes the wrong colours. Absent an override nothing runs and the CSS
   `color-scheme: light dark` follows the browser preference on its own.
