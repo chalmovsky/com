@@ -4,6 +4,7 @@
 <meta name="viewport" content="width=device-width">
 <meta name="color-scheme" content="light dark">
 <title>Chalmovský</title>
+<meta name="description" content="Personal site of Chalmovský: posts on software, tools, and the occasional detour. Click the cabin.">
 <link rel="icon" href="assets/favicon-96x96.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="alternate" type="application/rss+xml" title="Chalmovský" href="feed.xml">
@@ -72,16 +73,16 @@ html.unwind .cabin .windows{animation:none;opacity:0}
 @media (prefers-reduced-motion:reduce){.cabin .windows,.lit,#snow{animation:none!important}html *{transition-duration:.01s!important}}
 @media (max-width:36em){.cabin{float:none;width:100%;margin:0 0 1.5em}.cabin .frame{transform:none}}
 </style>
-<script data-goatcounter="https://chalmovsky.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 
 <div class="sky"></div>
 <canvas id="snow" aria-hidden="true"></canvas>
 
+<main>
 <button class="cabin" type="button" aria-pressed="false" aria-label="Toggle night mode" title="Click me">
   <span class="frame">
     <picture>
       <source srcset="assets/chalmovsky-600.webp" type="image/webp">
-      <img src="assets/chalmovsky-600.jpg" width="600" height="600" alt="A log cabin in a snowy forest at night, every window glowing green." fetchpriority="high">
+      <img src="assets/chalmovsky-600.jpg" width="600" height="600" alt="A log cabin in a snowy forest at night, every window glowing green." fetchpriority="high" decoding="async">
     </picture>
     <span class="windows"></span>
   </span>
@@ -105,6 +106,7 @@ html.unwind .cabin .windows{animation:none;opacity:0}
   </li>
   -->
 </ul>
+</main>
 
 <footer>
   <p>Contact: <span id="mail"></span></p>
