@@ -7,9 +7,8 @@
     <description>Posts by Chalmovský</description>
     <language>en</language>
 
-    <!-- New posts go at the top. Copy an <item>, change it, done.
-         pubDate format: Sun, 15 Feb 2026 12:00:00 GMT -->
-
+    <!-- The items below are generated from posts/*.html by .github/build_posts.py on deploy. -->
+    <!-- items -->
     <item>
       <title>Samsung Magician disk utility takes 18 steps and two Recovery Mode reboots to uninstall</title>
       <link>https://chalmovsky.com/posts/samsung-magician.html</link>
