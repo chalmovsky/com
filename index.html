@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<meta name="color-scheme" content="light dark">
+<title>Chalmovský</title>
+<link rel="icon" href="assets/favicon-96x96.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="alternate" type="application/rss+xml" title="Chalmovský" href="feed.xml">
+<style>
+body{max-width:40em;margin:auto;padding:1em;line-height:1.5;position:relative}
+.projects{display:grid;grid-template-columns:repeat(auto-fill,minmax(15em,1fr));gap:1em;list-style:none;padding:0}
+.projects li{border:1px solid #8884;padding:.8em 1em}
+.projects h3{margin:0 0 .3em;font-size:1em}
+.projects p{margin:0}
+footer{margin-top:3em;font-size:.9em}
+h1{margin-top:1.4em}
+
+/* ---- the cabin: a still picture until clicked -------------------------- */
+:root{--glow:#3cff6e}
+.cabin:focus{outline:none}.cabin:focus-visible{outline:2px dashed var(--glow);outline-offset:8px}
+.cabin{display:block;float:right;width:min(16em,46vw);aspect-ratio:1;margin:.2em 0 1em 1.5em;position:relative;
+  border:0;padding:0;background:none;cursor:pointer;font:inherit;shape-outside:margin-box}
+.cabin .frame{display:block;position:absolute;inset:0;border-radius:12px;overflow:hidden;transform:rotate(2.5deg);
+  box-shadow:0 0 0 1px #fff2 inset,0 1.5em 3em -1em #000a;transition:box-shadow 1.5s}
+.cabin img{display:block;width:100%;height:100%;object-fit:cover;transition:opacity 2.8s ease-in,filter 2.8s ease-in,transform 2.8s ease-in}
+/* soft green blooms over the five windows; still until the wake-up */
+.cabin .windows{position:absolute;inset:0;mix-blend-mode:screen;pointer-events:none;opacity:0;transition:opacity .4s;
+  background:
+    radial-gradient(10% 9% at 30.2% 61.4%,var(--glow) 0 35%,transparent 70%),
+    radial-gradient(10% 9% at 44.4% 61.3%,var(--glow) 0 35%,transparent 70%),
+    radial-gradient(10% 9% at 60.2% 61.3%,var(--glow) 0 35%,transparent 70%),
+    radial-gradient(10% 9% at 70.4% 61.3%,var(--glow) 0 35%,transparent 70%),
+    radial-gradient(10% 9% at 65.2% 46%,var(--glow) 0 35%,transparent 70%)}
+/* glow that bleeds onto the page; hidden by day */
+.cabin::before{content:'';position:absolute;inset:-45%;z-index:-1;pointer-events:none;opacity:0;transition:opacity 3s,transform 3s;
+  background:radial-gradient(closest-side,color-mix(in srgb,var(--glow) 65%,transparent),transparent 70%);filter:blur(24px)}
+
+/* 1. wake: the windows start to flash */
+html.wake .cabin .windows{animation:swell 2.6s ease-in-out infinite}
+@keyframes swell{0%,100%{opacity:0}50%{opacity:1}}
+/* 2. titles pop neon, one by one (the .lit class is added in sequence) */
+h1,h2{transform-origin:left center}
+.lit{color:var(--glow)!important;text-shadow:0 0 .12em #fff8,0 0 .5em var(--glow),0 0 1.5em #0f6;
+  animation:boom .6s cubic-bezier(.2,1.5,.4,1)}
+a.lit{color:#8dffb0!important;animation-name:boom-text}
+@keyframes boom{0%{transform:scale(1);text-shadow:none}35%{transform:scale(1.12);color:#fff!important;
+  text-shadow:0 0 .3em #fff,0 0 1em var(--glow),0 0 2em var(--glow)}100%{transform:scale(1)}}
+@keyframes boom-text{0%{text-shadow:none}35%{color:#fff!important;text-shadow:0 0 .3em #fff,0 0 1em var(--glow),0 0 2em var(--glow)}}
+/* 3. snow (canvas, see script) */
+#snow{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:5;opacity:0;transition:opacity 2.5s}
+html.snowing #snow{opacity:1}
+/* 4. dusk: the sky fades in behind the page, the cabin dissolves into it */
+.sky{position:fixed;inset:0;z-index:-2;opacity:0;transition:opacity 3.5s ease-in-out;pointer-events:none;
+  background:radial-gradient(120% 90% at 50% -10%,#0f3a2a 0%,#071b16 45%,#03080a 100%)}
+html.dusk .sky{opacity:1}
+html.dusk body{color:#b9ffcf;transition:color 3.5s}
+html.dusk a:not(.lit){color:#8dffb0;transition:color 3.5s}
+html.dusk .projects li{border-color:#3cff6e55;box-shadow:0 0 1.2em -.4em var(--glow),inset 0 0 1.5em -1em var(--glow);transition:all 3.5s}
+html.dusk footer{color:#7fcf97;transition:color 3.5s}
+html.dusk .cabin img{opacity:0;filter:blur(9px) saturate(1.6);transform:scale(1.12)}
+html.dusk .cabin .frame{box-shadow:none}
+html.dusk .cabin::before{opacity:.75;transform:scale(1.5)}
+html.dusk .cabin .windows{animation:die 4s ease-in-out forwards}
+@keyframes die{0%{opacity:.2}20%{opacity:.9}45%{opacity:.15}65%{opacity:.6}85%{opacity:.05}100%{opacity:0}}
+html.night .cabin .windows{opacity:0;animation:none}
+/* steady state and the way back */
+html.night{color-scheme:dark}
+html.night .lit{animation:none}
+html.unwind *{transition-duration:2s!important}
+html.unwind .cabin .windows{animation:none;opacity:0}
+@media (prefers-reduced-motion:reduce){.cabin .windows,.lit,#snow{animation:none!important}html *{transition-duration:.01s!important}}
+@media (max-width:36em){.cabin{float:none;width:100%;margin:0 0 1.5em}.cabin .frame{transform:none}}
+</style>
+<script data-goatcounter="https://chalmovsky.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+
+<div class="sky"></div>
+<canvas id="snow" aria-hidden="true"></canvas>
+
+<button class="cabin" type="button" aria-pressed="false" aria-label="Toggle night mode" title="Click me">
+  <span class="frame">
+    <picture>
+      <source srcset="assets/chalmovsky-600.webp" type="image/webp">
+      <img src="assets/chalmovsky-600.jpg" width="600" height="600" alt="A log cabin in a snowy forest at night, every window glowing green." fetchpriority="high">
+    </picture>
+    <span class="windows"></span>
+  </span>
+</button>
+<h1>Chalmovský</h1>
+
+<h2 id="posts">Posts</h2>
+<p>Subscribe with <a href="feed.xml">RSS</a>.</p>
+<ul class="titles">
+  <li>2026-03-29 <a href="posts/samsung-magician.html">Samsung Magician disk utility takes 18 steps and two Recovery Mode reboots to uninstall</a></li>
+  <li>2026-02-15 <a href="posts/waiting-for-the-miracle-to-come.html">Waiting for the Miracle to Come</a></li>
+</ul>
+
+<h2 id="projects">Projects</h2>
+<p>Nothing here yet.</p>
+<ul class="projects">
+  <!-- One <li> per project. Delete the "Nothing here yet" line above once there is one.
+  <li>
+    <h3><a href="https://example.com">Project title</a></h3>
+    <p>One or two sentences on what it is and who it is for.</p>
+  </li>
+  -->
+</ul>
+
+<footer>
+  <p>Contact: <span id="mail"></span></p>
+</footer>
+
+<script>
+document.getElementById('mail').textContent = ['yes.upgrade887', 'passinbox.com'].join('@');
+
+(() => {
+  const root = document.documentElement, cabin = document.querySelector('.cabin');
+  const titles = [...document.querySelectorAll('h1, h2, .titles a, .projects h3 a')];
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let timers = [], on = false;
+  const at = (ms, fn) => timers.push(setTimeout(fn, still ? 0 : ms));
+
+  // --- snow: a canvas full of flakes with size, depth, drift and sway ---
+  const canvas = document.getElementById('snow'), ctx = canvas.getContext('2d');
+  let flakes = [], raf = 0, W = 0, H = 0;
+  const size = () => { W = canvas.width = innerWidth * devicePixelRatio; H = canvas.height = innerHeight * devicePixelRatio; };
+  const flake = (top) => { const z = Math.random(); return { x: Math.random() * W, y: top ? -10 : Math.random() * H, z,
+    r: (0.6 + z * 2.2) * devicePixelRatio, v: (0.35 + z * 1.1) * devicePixelRatio, ph: Math.random() * 6.28, a: 0.35 + z * 0.6 }; };
+  const tick = () => {
+    ctx.clearRect(0, 0, W, H);
+    for (const f of flakes) {
+      f.y += f.v; f.ph += 0.012 + f.z * 0.01; f.x += Math.sin(f.ph) * (0.25 + f.z * 0.5) * devicePixelRatio - 0.15 * devicePixelRatio;
+      if (f.y > H + 10) Object.assign(f, flake(true));
+      if (f.x < -10) f.x = W + 10; else if (f.x > W + 10) f.x = -10;
+      ctx.globalAlpha = f.a; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, 6.28); ctx.fillStyle = '#fff'; ctx.fill();
+    }
+    raf = requestAnimationFrame(tick);
+  };
+  const startSnow = () => { size(); flakes = Array.from({ length: Math.round(W * H / (devicePixelRatio * devicePixelRatio) / 7000) }, () => flake(false)); cancelAnimationFrame(raf); if (!still) tick(); else tick(), cancelAnimationFrame(raf); root.classList.add('snowing'); };
+  const stopSnow = () => { root.classList.remove('snowing'); setTimeout(() => { cancelAnimationFrame(raf); ctx.clearRect(0, 0, W, H); }, 2200); };
+  addEventListener('resize', () => { if (on) size(); });
+
+  // --- the sequence ---
+  const nightfall = () => {
+    root.classList.add('wake');                                  // windows start flashing
+    titles.forEach((el, i) => at(2600 + i * 320, () => el.classList.add('lit')));   // boom, boom, boom
+    const afterTitles = 2600 + titles.length * 320 + 200;
+    at(afterTitles, startSnow);                                  // snow
+    at(afterTitles + 900, () => root.classList.add('dusk'));     // sky darkens, cabin dissolves
+    at(afterTitles + 900 + 3600, () => { root.classList.remove('wake'); root.classList.add('night'); });
+  };
+  const daybreak = () => {
+    root.classList.add('unwind');
+    root.classList.remove('wake', 'dusk', 'night');
+    titles.forEach((el) => el.classList.remove('lit'));
+    stopSnow();
+    at(2300, () => root.classList.remove('unwind'));
+  };
+
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && on) cabin.click(); });
+  cabin.addEventListener('click', () => {
+    cabin.blur();
+    timers.forEach(clearTimeout); timers = [];
+    on = !on;
+    cabin.setAttribute('aria-pressed', String(on));
+    on ? nightfall() : daybreak();
+  });
+})();
+</script>

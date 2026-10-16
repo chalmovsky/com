@@ -1,8 +1,4 @@
-dist
-.astro
-node_modules
+drafts
 .idea
 .claude
 .DS_Store
-.env
-.env.*
