@@ -29,7 +29,7 @@ h1{margin-top:1.4em}
 .cabin{display:block;float:right;width:min(16em,46vw);aspect-ratio:1;margin:.2em 0 1em 1.5em;position:relative;
   border:0;padding:0;background:none;cursor:pointer;font:inherit;shape-outside:margin-box}
 .cabin .frame{display:block;position:absolute;inset:0;border-radius:12px;overflow:hidden;transform:rotate(2.5deg);
-  box-shadow:0 0 0 1px #fff2 inset,0 1.5em 3em -1em #000a;transition:box-shadow 1.5s,transform 1.6s cubic-bezier(.3,1.45,.5,1)}
+  box-shadow:0 0 0 1px #fff2 inset,0 1.5em 3em -1em #000a;transition:box-shadow 1.5s,transform 1.2s cubic-bezier(.45,0,.2,1)}
 .cabin img{display:block;width:100%;height:100%;object-fit:cover;transition:opacity 2.8s ease-in,filter 2.8s ease-in,transform 2.8s ease-in}
 /* soft green blooms over the five windows; still until the wake-up */
 .cabin .windows{position:absolute;inset:0;mix-blend-mode:screen;pointer-events:none;opacity:0;transition:opacity .4s;
@@ -43,11 +43,9 @@ h1{margin-top:1.4em}
 .cabin::before{content:'';position:absolute;inset:-45%;z-index:-1;pointer-events:none;opacity:0;transition:opacity 3s,transform 3s;
   background:radial-gradient(closest-side,color-mix(in srgb,var(--glow) 65%,transparent),transparent 70%);filter:blur(24px)}
 
-/* 0. level: the cabin straightens up and lifts a little before anything else happens,
+/* 0. level: the cabin rotates straight before anything else happens,
    and stays straight until the way back is over (the .level class, see script) */
-html.level .cabin .frame{transform:none;transition:box-shadow 1.5s,transform .9s cubic-bezier(.34,1.56,.64,1)}
-html.level .cabin{animation:lift 1s cubic-bezier(.3,.7,.4,1)}
-@keyframes lift{0%,100%{transform:none}40%{transform:translateY(-.35em) scale(1.035)}}
+html.level .cabin .frame{transform:none;transition:box-shadow 1.5s,transform .9s cubic-bezier(.45,0,.2,1)}
 /* 1. wake: the windows start to flash */
 html.wake .cabin .windows{animation:swell 2.6s ease-in-out infinite}
 @keyframes swell{0%,100%{opacity:0}50%{opacity:1}}
@@ -136,7 +134,7 @@ document.getElementById('mail').textContent = ['yes.upgrade887', 'passinbox.com'
   const root = document.documentElement, cabin = document.querySelector('.cabin');
   const titles = [...document.querySelectorAll('h1, h2, .titles a, .projects h3 a')];
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let timers = [], on = false;
+  let timers = [], on = false, run = 0;
   const at = (ms, fn) => timers.push(setTimeout(fn, still ? 0 : ms));
 
   // --- snow: a canvas full of flakes with size, depth, drift and sway ---
@@ -175,14 +173,18 @@ document.getElementById('mail').textContent = ['yes.upgrade887', 'passinbox.com'
     root.classList.remove('wake', 'dusk', 'night');
     titles.forEach((el) => el.classList.remove('lit'));
     stopSnow();
-    at(2300, () => root.classList.remove('unwind'));
-    at(2700, () => root.classList.remove('level'));              // back to its slight tilt
+    // the tilt comes last: wait until every fade on the page has really finished
+    const me = run, tiltBack = () => { if (me !== run) return; root.classList.remove('unwind'); at(250, () => root.classList.remove('level')); };
+    if (!document.getAnimations) return at(2300, tiltBack);
+    requestAnimationFrame(() => requestAnimationFrame(() => Promise.all(document.getAnimations()
+      .filter((a) => a.effect && a.effect.getComputedTiming().endTime !== Infinity)
+      .map((a) => a.finished.catch(() => {}))).then(tiltBack)));
   };
 
   addEventListener('keydown', (e) => { if (e.key === 'Escape' && on) cabin.click(); });
   cabin.addEventListener('click', () => {
     cabin.blur();
-    timers.forEach(clearTimeout); timers = [];
+    timers.forEach(clearTimeout); timers = []; run++;
     on = !on;
     cabin.setAttribute('aria-pressed', String(on));
     on ? nightfall() : daybreak();
