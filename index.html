@@ -29,7 +29,7 @@ h1{margin-top:1.4em}
 .cabin{display:block;float:right;width:min(16em,46vw);aspect-ratio:1;margin:.2em 0 1em 1.5em;position:relative;
   border:0;padding:0;background:none;cursor:pointer;font:inherit;shape-outside:margin-box}
 .cabin .frame{display:block;position:absolute;inset:0;border-radius:12px;overflow:hidden;transform:rotate(2.5deg);
-  box-shadow:0 0 0 1px #fff2 inset,0 1.5em 3em -1em #000a;transition:box-shadow 1.5s}
+  box-shadow:0 0 0 1px #fff2 inset,0 1.5em 3em -1em #000a;transition:box-shadow 1.5s,transform 1.6s cubic-bezier(.3,1.45,.5,1)}
 .cabin img{display:block;width:100%;height:100%;object-fit:cover;transition:opacity 2.8s ease-in,filter 2.8s ease-in,transform 2.8s ease-in}
 /* soft green blooms over the five windows; still until the wake-up */
 .cabin .windows{position:absolute;inset:0;mix-blend-mode:screen;pointer-events:none;opacity:0;transition:opacity .4s;
@@ -43,6 +43,11 @@ h1{margin-top:1.4em}
 .cabin::before{content:'';position:absolute;inset:-45%;z-index:-1;pointer-events:none;opacity:0;transition:opacity 3s,transform 3s;
   background:radial-gradient(closest-side,color-mix(in srgb,var(--glow) 65%,transparent),transparent 70%);filter:blur(24px)}
 
+/* 0. level: the cabin straightens up and lifts a little before anything else happens,
+   and stays straight until the way back is over (the .level class, see script) */
+html.level .cabin .frame{transform:none;transition:box-shadow 1.5s,transform .9s cubic-bezier(.34,1.56,.64,1)}
+html.level .cabin{animation:lift 1s cubic-bezier(.3,.7,.4,1)}
+@keyframes lift{0%,100%{transform:none}40%{transform:translateY(-.35em) scale(1.035)}}
 /* 1. wake: the windows start to flash */
 html.wake .cabin .windows{animation:swell 2.6s ease-in-out infinite}
 @keyframes swell{0%,100%{opacity:0}50%{opacity:1}}
@@ -156,9 +161,11 @@ document.getElementById('mail').textContent = ['yes.upgrade887', 'passinbox.com'
 
   // --- the sequence ---
   const nightfall = () => {
-    root.classList.add('wake');                                  // windows start flashing
-    titles.forEach((el, i) => at(2600 + i * 320, () => el.classList.add('lit')));   // boom, boom, boom
-    const afterTitles = 2600 + titles.length * 320 + 200;
+    root.classList.remove('unwind');
+    root.classList.add('level');                                 // the cabin straightens up
+    at(1000, () => root.classList.add('wake'));                  // windows start flashing
+    titles.forEach((el, i) => at(3600 + i * 320, () => el.classList.add('lit')));   // boom, boom, boom
+    const afterTitles = 3600 + titles.length * 320 + 200;
     at(afterTitles, startSnow);                                  // snow
     at(afterTitles + 900, () => root.classList.add('dusk'));     // sky darkens, cabin dissolves
     at(afterTitles + 900 + 3600, () => { root.classList.remove('wake'); root.classList.add('night'); });
@@ -169,6 +176,7 @@ document.getElementById('mail').textContent = ['yes.upgrade887', 'passinbox.com'
     titles.forEach((el) => el.classList.remove('lit'));
     stopSnow();
     at(2300, () => root.classList.remove('unwind'));
+    at(2700, () => root.classList.remove('level'));              // back to its slight tilt
   };
 
   addEventListener('keydown', (e) => { if (e.key === 'Escape' && on) cabin.click(); });
