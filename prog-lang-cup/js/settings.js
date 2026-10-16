@@ -12,7 +12,7 @@ var DEFAULTS = {
   speed: 1,                           /* 0.5 | 1 | 1.5 | 2 | 3 */
   intro: REDUCE ? 'short' : 'full',   /* full | short | skip */
   gfx: SMALL ? 'medium' : 'high',     /* high | medium | low | off */
-  shake: !REDUCE, flashes: !REDUCE, reveal: 'animated', crt: false,
+  shake: !REDUCE, flashes: !REDUCE, bgMotion: !REDUCE, reveal: 'animated', crt: false,
   blind: false, wrap: false, size: 'm', autoContinue: false, tab: 'groups'
 };
 var SET = Object.assign({}, DEFAULTS, Cup.store.get(KEY) || {});
@@ -34,6 +34,7 @@ function apply() {
   var c = document.documentElement.classList;
   c.toggle('crt', !!SET.crt);
   c.toggle('calm', SET.anim !== 'full');
+  c.toggle('still', SET.bgMotion === false);
   c.toggle('no3d', SET.gfx === 'off' || !window.THREE);
   document.body.classList.toggle('wrap-on', !!SET.wrap);
   document.body.classList.remove('sz-s', 'sz-m', 'sz-l');

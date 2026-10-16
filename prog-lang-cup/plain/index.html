@@ -14412,21 +14412,44 @@ int main(int argc, const char *argv[]) {
 (main (rest sb-ext:*posix-argv*))
 </script>
 <script>
-/* Language Cup engine: languages, challenges, highlighting, tournament rules, saving. Exposes one global: Cup. */
+/* Language Cup engine: languages, challenges, highlighting, tournament rules, saving. Shared with the Plain page. Exposes one global: Cup. */
 var Cup = (function () {
 'use strict';
 var VERSION = 2;
 
 var LANGS = [
-  { id: 'python', name: 'Python' }, { id: 'javascript', name: 'JavaScript' }, { id: 'typescript', name: 'TypeScript' },
-  { id: 'rust', name: 'Rust' }, { id: 'go', name: 'Go' }, { id: 'c', name: 'C' }, { id: 'cpp', name: 'C++' },
-  { id: 'java', name: 'Java' }, { id: 'kotlin', name: 'Kotlin' }, { id: 'swift', name: 'Swift' }, { id: 'csharp', name: 'C#' },
-  { id: 'ruby', name: 'Ruby' }, { id: 'php', name: 'PHP' }, { id: 'haskell', name: 'Haskell' }, { id: 'elixir', name: 'Elixir' },
-  { id: 'lua', name: 'Lua' },
-  { id: 'dart', name: 'Dart' }, { id: 'scala', name: 'Scala' }, { id: 'zig', name: 'Zig' }, { id: 'julia', name: 'Julia' },
-  { id: 'r', name: 'R' }, { id: 'perl', name: 'Perl' }, { id: 'clojure', name: 'Clojure' }, { id: 'fsharp', name: 'F#' },
-  { id: 'ocaml', name: 'OCaml' }, { id: 'erlang', name: 'Erlang' }, { id: 'nim', name: 'Nim' }, { id: 'crystal', name: 'Crystal' },
-  { id: 'gleam', name: 'Gleam' }, { id: 'bash', name: 'Bash' }, { id: 'objc', name: 'Objective-C' }, { id: 'lisp', name: 'Common Lisp' }
+  { id: 'python', name: 'Python', color: '#3776AB', abbr: 'PY', move: 'Indent Strike' },
+  { id: 'javascript', name: 'JavaScript', color: '#F0DB4F', abbr: 'JS', move: 'Callback Cascade' },
+  { id: 'typescript', name: 'TypeScript', color: '#3178C6', abbr: 'TS', move: 'Type Guard' },
+  { id: 'rust', name: 'Rust', color: '#DEA584', abbr: 'RS', move: 'Borrow Check' },
+  { id: 'go', name: 'Go', color: '#00ADD8', abbr: 'GO', move: 'Goroutine Swarm' },
+  { id: 'c', name: 'C', color: '#A8B9CC', abbr: 'C', move: 'Segfault Slam' },
+  { id: 'cpp', name: 'C++', color: '#00599C', abbr: 'C++', move: 'Template Barrage' },
+  { id: 'java', name: 'Java', color: '#E76F00', abbr: 'JAVA', move: 'Factory Factory' },
+  { id: 'kotlin', name: 'Kotlin', color: '#7F52FF', abbr: 'KT', move: 'Null-Safe Kick' },
+  { id: 'swift', name: 'Swift', color: '#F05138', abbr: 'SWIFT', move: 'Optional Chain' },
+  { id: 'csharp', name: 'C#', color: '#9B4F96', abbr: 'C#', move: 'LINQ Lash' },
+  { id: 'ruby', name: 'Ruby', color: '#CC342D', abbr: 'RB', move: 'Monkey Patch' },
+  { id: 'php', name: 'PHP', color: '#777BB4', abbr: 'PHP', move: 'Elephant Stomp' },
+  { id: 'haskell', name: 'Haskell', color: '#5E5086', abbr: 'HS', move: 'Monad Bind' },
+  { id: 'elixir', name: 'Elixir', color: '#A06CC4', abbr: 'EX', move: 'Pipe Cannon' },
+  { id: 'lua', name: 'Lua', color: '#4054C8', abbr: 'LUA', move: 'Metatable Twist' },
+  { id: 'dart', name: 'Dart', color: '#0175C2', abbr: 'DART', move: 'Hot Reload' },
+  { id: 'scala', name: 'Scala', color: '#DC322F', abbr: 'SCALA', move: 'Implicit Ambush' },
+  { id: 'zig', name: 'Zig', color: '#F7A41D', abbr: 'ZIG', move: 'Comptime Crush' },
+  { id: 'julia', name: 'Julia', color: '#9558B2', abbr: 'JL', move: 'Multiple Dispatch' },
+  { id: 'r', name: 'R', color: '#276DC3', abbr: 'R', move: 'Vector Volley' },
+  { id: 'perl', name: 'Perl', color: '#39457E', abbr: 'PERL', move: 'Regex Rampage' },
+  { id: 'clojure', name: 'Clojure', color: '#63B132', abbr: 'CLJ', move: 'Paren Barrage' },
+  { id: 'fsharp', name: 'F#', color: '#378BBA', abbr: 'F#', move: 'Pipeline Punch' },
+  { id: 'ocaml', name: 'OCaml', color: '#EC6813', abbr: 'ML', move: 'Functor Fury' },
+  { id: 'erlang', name: 'Erlang', color: '#A90533', abbr: 'ERL', move: 'Let It Crash' },
+  { id: 'nim', name: 'Nim', color: '#FFE953', abbr: 'NIM', move: 'Macro Missile' },
+  { id: 'crystal', name: 'Crystal', color: '#C9D3E6', abbr: 'CR', move: 'Fiber Flurry' },
+  { id: 'gleam', name: 'Gleam', color: '#FFAFF3', abbr: 'GLM', move: 'Lucy Shine' },
+  { id: 'bash', name: 'Bash', color: '#4EAA25', abbr: 'SH', move: 'Pipe Storm' },
+  { id: 'objc', name: 'Objective-C', color: '#438EFF', abbr: 'OBJC', move: 'Message Send' },
+  { id: 'lisp', name: 'Common Lisp', color: '#3FB68B', abbr: 'LISP', move: 'Lambda Lunge' }
 ];
 var CLASSIC = LANGS.slice(0, 16).map(function (l) { return l.id; });
 var LMAP = {};
@@ -14758,8 +14781,16 @@ function newState(langs) {
 
 /* ---------- state ---------- */
 var S = null, HIST = [], SEEN = {}, KEY = '', HKEY = '', SKEY = '', PKEY = '';
-function init(prefix) {
+/* Both pages (Arena and Plain) pass the same prefix, so they share one tournament. `legacy` is the page's
+   old prefix: its saved tournament moves over the first time the shared one is empty. */
+function init(prefix, legacy) {
   KEY = prefix + ':state:v2'; HKEY = prefix + ':history:v2'; SKEY = prefix + ':seen:v2'; PKEY = prefix + ':picked:v2';
+  if (legacy && !store.get(KEY) && store.get(legacy + ':state:v2')) {
+    ['state', 'history', 'seen', 'picked'].forEach(function (k) {
+      var v = store.get(legacy + ':' + k + ':v2');
+      if (v != null) store.set(prefix + ':' + k + ':v2', v);
+    });
+  }
   S = store.get(KEY);
   if (!S || S.v !== VERSION || !S.matches) S = null;
   if (S && S.matches.GF2) { delete S.matches.GF2; save(); } /* the grand final is a single match now */
@@ -14884,30 +14915,50 @@ function langStatus(id) {
   return out ? 'out' : 'alive';
 }
 
-/* ---------- challenge choice: never the same snippet twice for a language until it has seen all 30 ---------- */
+/* What winning or losing this match means, for banners and result lines. */
+function stakes(m) {
+  if (m.stage === 'group') return { win: 'takes the points', lose: 'can still recover in the group' };
+  if (m.stage === 'ub') return { win: 'advances in the upper bracket', lose: 'drops to the lower bracket' };
+  if (m.stage === 'lb') return { win: 'survives', lose: 'is eliminated' };
+  return { win: 'wins the cup', lose: 'finishes second' };
+}
+function anyStarted() { return !!S && values(S.matches).some(function (m) { return m.picks.length > 0 || m.done; }); }
+
+/* ---------- challenge choice: same task for both fighters, never one they already had ----------
+   First rule: within a cup, a language never gets the same task twice (when the pair has any task left
+   that neither of them had in this cup). Then, across cups, each language remembers its last 29 tasks in
+   order and the duel takes the task either fighter saw longest ago, so a returning task is always the
+   oldest one. */
+var WINDOW = 29;
 function seenList(l) { return SEEN[l] || (SEEN[l] = []); }
+/* How many duels ago this language last had task c: 1 = its previous duel, Infinity = not within the window. */
+function age(l, c) { var h = seenList(l), i = h.lastIndexOf(c); return i < 0 ? Infinity : h.length - i; }
+/* Tasks this language already had in the current cup (kept in the saved tournament, so undo rewinds it). */
+function cupUsed(l) { if (!S.used) S.used = {}; return S.used[l] || (S.used[l] = []); }
 function chooseChallenge(m, a, b) {
-  [a, b].forEach(function (l) { if (seenList(l).length >= CH.length) SEEN[l] = []; });
-  var sa = seenList(a), sb = seenList(b);
+  var ua = cupUsed(a), ub = cupUsed(b);
   var usedCats = m.games.map(function (id) { return CHMAP[id].cat; });
-  /* Prefer tasks the rest of the field has already used up, so every language works through the
-     catalogue in step and any two opponents almost always still share an unseen task. */
   var others = S.langs.filter(function (l) { return l !== a && l !== b; }), best = null;
   CH.forEach(function (c) {
-    if (m.games.indexOf(c.id) >= 0) return;
-    var done = others.length ? others.filter(function (l) { return seenList(l).indexOf(c.id) >= 0; }).length / others.length : 0;
-    var cost = (sa.indexOf(c.id) >= 0 ? 10 : 0) + (sb.indexOf(c.id) >= 0 ? 10 : 0) +
-      (has(c.id, a) && has(c.id, b) ? 0 : 100) + (usedCats.indexOf(c.cat) >= 0 ? 3 : 0) - 4 * done + Math.random();
-    if (!best || cost < best.cost) best = { id: c.id, cost: cost };
+    if (m.games.indexOf(c.id) >= 0 || !has(c.id, a) || !has(c.id, b)) return;
+    var ea = age(a, c.id), eb = age(b, c.id), fresh = Math.min(ea, eb);
+    /* tasks the rest of the field already had keep everyone moving through the catalogue in step */
+    var done = others.length ? others.filter(function (l) { return age(l, c.id) !== Infinity; }).length / others.length : 0;
+    var cupFresh = (ua.indexOf(c.id) < 0 ? 1 : 0) + (ub.indexOf(c.id) < 0 ? 1 : 0);
+    var score = [cupFresh, fresh === Infinity ? 1e6 : fresh, Math.min(ea, 999) + Math.min(eb, 999), usedCats.indexOf(c.cat) < 0 ? 1 : 0, done + Math.random() * 0.5];
+    if (!best || cmp(score, best.score) > 0) best = { id: c.id, score: score };
   });
+  if (!best) best = { id: CH.filter(function (c) { return m.games.indexOf(c.id) < 0; })[0].id };
   [a, b].forEach(function (l) {
-    var s = seenList(l);
-    if (s.indexOf(best.id) >= 0) SEEN[l] = [best.id]; /* forced repeat: this language starts a new round of the catalogue */
-    else s.push(best.id);
+    var h = seenList(l);
+    cupUsed(l).push(best.id);
+    h.push(best.id);
+    if (h.length > WINDOW) h.splice(0, h.length - WINDOW);
   });
   saveSeen();
   return best.id;
 }
+function cmp(x, y) { for (var i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i] > y[i] ? 1 : -1; return 0; }
 function seenTotal() { return Object.keys(SEEN).reduce(function (t, l) { return t + (LMAP[l] ? SEEN[l].length : 0); }, 0); }
 function forgetSeen() { SEEN = {}; saveSeen(); }
 
@@ -14993,7 +15044,7 @@ return {
   standings: standings, fate: fate, resolve: resolve, participants: participants, isActive: isActive, isReady: isReady,
   nextMatch: nextMatch, champion: champion, podium: podium, progress: progress, srcLabel: srcLabel, langStatus: langStatus,
   need: need, finished: finished, prepare: prepare, pick: pick, undoPick: undoPick, confirmMatch: confirmMatch,
-  undoResult: undoResult, stats: stats, seenTotal: seenTotal, forgetSeen: forgetSeen
+  undoResult: undoResult, stats: stats, seenTotal: seenTotal, forgetSeen: forgetSeen, stakes: stakes, anyStarted: anyStarted, store: store
 };
 })();
 </script>
@@ -15001,7 +15052,7 @@ return {
 (function () {
 var C = Cup, E = C.esc, app = document.getElementById('app'), msg = '', current = null, view = 'home';
 C.loadSnippets(document.getElementById('snippets').textContent);
-C.init('langcup-plain');
+C.init('langcup', 'langcup-plain');
 var TOTAL = C.CH.length * C.LANGS.length;
 
 function link(attrs, text) { return '<a href="#" ' + attrs + '>' + text + '</a>'; }
@@ -15014,7 +15065,7 @@ function setChosen(ids) { chosen = {}; ids.forEach(function (id) { chosen[id] = 
 function chosenIds() { return C.LANGS.map(function (l) { return l.id; }).filter(function (id) { return chosen[id]; }); }
 function setup() {
   view = 'setup';
-  var ids = chosenIds(), n = ids.length, h = '<h1>Plain Language Cup</h1>' + '<p class="small"><a href="../">3D Arena version</a> · <a href="/">chalmovsky.com</a></p>';
+  var ids = chosenIds(), n = ids.length, h = '<h1>Plain Language Cup</h1>' + '<p class="small"><b>Active ultra boring mode.</b> Same tournament as the Arena. <a href="../">Back to the 3D Arena</a> · <a href="/">chalmovsky.com</a></p>';
   if (msg) h += '<p class="note">' + E(msg) + '</p>';
   h += '<p>Pick the languages for a new tournament (4 to 32). In every duel you see the same task written in two languages and pick the one you prefer.</p>';
   h += '<p class="quick small">Quick picks: ' + [['all', 'All 32'], ['none', 'None'], ['classic', 'Original 16'], ['new', 'New 16'], ['r8', 'Random 8'], ['r16', 'Random 16']]
@@ -15080,7 +15131,7 @@ function roundTable(title, ids) {
 function home() {
   view = 'home';
   if (!C.S) { setChosen(C.lastPicked() || C.CLASSIC); return setup(); }
-  var S = C.S, pr = C.progress(), ch = C.podium(), n = C.nextMatch(), h = '<h1>Plain Language Cup</h1>' + '<p class="small"><a href="../">3D Arena version</a> · <a href="/">chalmovsky.com</a></p>';
+  var S = C.S, pr = C.progress(), ch = C.podium(), n = C.nextMatch(), h = '<h1>Plain Language Cup</h1>' + '<p class="small"><b>Active ultra boring mode.</b> Same tournament as the Arena. <a href="../">Back to the 3D Arena</a> · <a href="/">chalmovsky.com</a></p>';
   if (!C.STORAGE_OK) h += '<p class="note">This browser is blocking storage, so progress will not be saved.</p>';
   if (msg) h += '<p class="note">' + E(msg) + '</p>';
   h += '<p>' + pr.phase + ', ' + pr.done + ' of ' + pr.total + ' matches played · ' + S.langs.length + ' languages.</p>';

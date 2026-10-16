@@ -304,7 +304,7 @@ function buildComposer() {
 }
 
 /* ---------- camera ---------- */
-var W = 1, H = 1, time = 0, last = performance.now(), shakeAmt = 0, freezeUntil = 0, mode = 'title', running = false;
+var W = 1, H = 1, time = 0, bgTime = 0, last = performance.now(), shakeAmt = 0, freezeUntil = 0, mode = 'title', running = false;
 var cam = { px: 0, py: 3, pz: 17, lx: 0, ly: 0.8, lz: 0, orbit: 0.08 };
 var camGoal = null;
 function size() {
@@ -356,18 +356,21 @@ function frame(now) {
   if (document.hidden) { last = now; return; }
   var raw = Math.min(0.05, (now - last) / 1000); last = now;
   if (now < freezeUntil) raw = 0;
-  var on = Arena.on(), calm = SET().anim !== 'full';
+  var on = Arena.on(), calm = SET().anim !== 'full', bgm = SET().bgMotion !== false;
   var dt = raw * (on ? SET().speed : 1);
   time += dt;
-  skyU.uTime.value = time; floorU.uTime.value = time;
+  /* the background keeps its own clock so it can stand still while the fighters move */
+  if (bgm) bgTime += dt;
+  skyU.uTime.value = bgTime; floorU.uTime.value = bgTime;
   floorU.uSpeed.value = mode === 'match' || mode === 'fight' ? 1.4 : 0.5;
   floorU.uPulse.value = Math.min(1, floorU.uPulse.value + dt * 0.9);
-  pillarGroup.rotation.y += dt * 0.03;
-  pillarGroup.children.forEach(function (p, i) { p.scale.x = p.scale.z = 1 + 0.25 * Math.sin(time * 1.5 + i); });
+  if (bgm) pillarGroup.rotation.y += dt * 0.03;
+  pillarGroup.children.forEach(function (p, i) { p.scale.x = p.scale.z = 1 + 0.25 * Math.sin(bgTime * 1.5 + i); });
 
   var en = SET().gfx === 'low' ? EN / 2 : EN;
   eg.setDrawRange(0, en);
   for (var i = 0; i < en; i++) {
+    if (!bgm) break;
     epos[i * 3 + 1] += espd[i] * dt * (calm ? 0.5 : 1);
     epos[i * 3] += Math.sin(time + i) * dt * 0.15;
     if (epos[i * 3 + 1] > FLOOR_Y + 24) epos[i * 3 + 1] = FLOOR_Y;
@@ -449,9 +452,9 @@ function frame(now) {
 
   shakeAmt *= Math.pow(0.015, raw);
   var sk = SET().shake ? shakeAmt : 0;
-  if (cam.orbit) orbitA += dt * cam.orbit;
+  if (cam.orbit && bgm) orbitA += dt * cam.orbit;
   var ox = cam.orbit ? Math.sin(orbitA) * cam.pz * 0.35 : 0, oz = cam.orbit ? Math.cos(orbitA) * 0.12 * cam.pz : 0;
-  var sway = calm ? 0 : 1;
+  var sway = calm || !bgm ? 0 : 1;
   camera.position.set(cam.px + ox + Math.sin(time * 0.21) * 0.35 * sway + (Math.random() - 0.5) * sk, cam.py + Math.sin(time * 0.17) * 0.18 * sway + (Math.random() - 0.5) * sk, cam.pz + (cam.orbit ? oz - 0.12 * cam.pz : 0));
   camera.lookAt(cam.lx, cam.ly, cam.lz);
   if (composer) composer.render(); else renderer.render(scene, camera);

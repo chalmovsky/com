@@ -367,8 +367,16 @@ function newState(langs) {
 
 /* ---------- state ---------- */
 var S = null, HIST = [], SEEN = {}, KEY = '', HKEY = '', SKEY = '', PKEY = '';
-function init(prefix) {
+/* Both pages (Arena and Plain) pass the same prefix, so they share one tournament. `legacy` is the page's
+   old prefix: its saved tournament moves over the first time the shared one is empty. */
+function init(prefix, legacy) {
   KEY = prefix + ':state:v2'; HKEY = prefix + ':history:v2'; SKEY = prefix + ':seen:v2'; PKEY = prefix + ':picked:v2';
+  if (legacy && !store.get(KEY) && store.get(legacy + ':state:v2')) {
+    ['state', 'history', 'seen', 'picked'].forEach(function (k) {
+      var v = store.get(legacy + ':' + k + ':v2');
+      if (v != null) store.set(prefix + ':' + k + ':v2', v);
+    });
+  }
   S = store.get(KEY);
   if (!S || S.v !== VERSION || !S.matches) S = null;
   if (S && S.matches.GF2) { delete S.matches.GF2; save(); } /* the grand final is a single match now */
@@ -502,30 +510,41 @@ function stakes(m) {
 }
 function anyStarted() { return !!S && values(S.matches).some(function (m) { return m.picks.length > 0 || m.done; }); }
 
-/* ---------- challenge choice: never the same snippet twice for a language until it has seen all 30 ---------- */
+/* ---------- challenge choice: same task for both fighters, never one they already had ----------
+   First rule: within a cup, a language never gets the same task twice (when the pair has any task left
+   that neither of them had in this cup). Then, across cups, each language remembers its last 29 tasks in
+   order and the duel takes the task either fighter saw longest ago, so a returning task is always the
+   oldest one. */
+var WINDOW = 29;
 function seenList(l) { return SEEN[l] || (SEEN[l] = []); }
+/* How many duels ago this language last had task c: 1 = its previous duel, Infinity = not within the window. */
+function age(l, c) { var h = seenList(l), i = h.lastIndexOf(c); return i < 0 ? Infinity : h.length - i; }
+/* Tasks this language already had in the current cup (kept in the saved tournament, so undo rewinds it). */
+function cupUsed(l) { if (!S.used) S.used = {}; return S.used[l] || (S.used[l] = []); }
 function chooseChallenge(m, a, b) {
-  [a, b].forEach(function (l) { if (seenList(l).length >= CH.length) SEEN[l] = []; });
-  var sa = seenList(a), sb = seenList(b);
+  var ua = cupUsed(a), ub = cupUsed(b);
   var usedCats = m.games.map(function (id) { return CHMAP[id].cat; });
-  /* Prefer tasks the rest of the field has already used up, so every language works through the
-     catalogue in step and any two opponents almost always still share an unseen task. */
   var others = S.langs.filter(function (l) { return l !== a && l !== b; }), best = null;
   CH.forEach(function (c) {
-    if (m.games.indexOf(c.id) >= 0) return;
-    var done = others.length ? others.filter(function (l) { return seenList(l).indexOf(c.id) >= 0; }).length / others.length : 0;
-    var cost = (sa.indexOf(c.id) >= 0 ? 10 : 0) + (sb.indexOf(c.id) >= 0 ? 10 : 0) +
-      (has(c.id, a) && has(c.id, b) ? 0 : 100) + (usedCats.indexOf(c.cat) >= 0 ? 3 : 0) - 4 * done + Math.random();
-    if (!best || cost < best.cost) best = { id: c.id, cost: cost };
+    if (m.games.indexOf(c.id) >= 0 || !has(c.id, a) || !has(c.id, b)) return;
+    var ea = age(a, c.id), eb = age(b, c.id), fresh = Math.min(ea, eb);
+    /* tasks the rest of the field already had keep everyone moving through the catalogue in step */
+    var done = others.length ? others.filter(function (l) { return age(l, c.id) !== Infinity; }).length / others.length : 0;
+    var cupFresh = (ua.indexOf(c.id) < 0 ? 1 : 0) + (ub.indexOf(c.id) < 0 ? 1 : 0);
+    var score = [cupFresh, fresh === Infinity ? 1e6 : fresh, Math.min(ea, 999) + Math.min(eb, 999), usedCats.indexOf(c.cat) < 0 ? 1 : 0, done + Math.random() * 0.5];
+    if (!best || cmp(score, best.score) > 0) best = { id: c.id, score: score };
   });
+  if (!best) best = { id: CH.filter(function (c) { return m.games.indexOf(c.id) < 0; })[0].id };
   [a, b].forEach(function (l) {
-    var s = seenList(l);
-    if (s.indexOf(best.id) >= 0) SEEN[l] = [best.id]; /* forced repeat: this language starts a new round of the catalogue */
-    else s.push(best.id);
+    var h = seenList(l);
+    cupUsed(l).push(best.id);
+    h.push(best.id);
+    if (h.length > WINDOW) h.splice(0, h.length - WINDOW);
   });
   saveSeen();
   return best.id;
 }
+function cmp(x, y) { for (var i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i] > y[i] ? 1 : -1; return 0; }
 function seenTotal() { return Object.keys(SEEN).reduce(function (t, l) { return t + (LMAP[l] ? SEEN[l].length : 0); }, 0); }
 function forgetSeen() { SEEN = {}; saveSeen(); }
 

@@ -71,15 +71,15 @@ var SPEAKER_OFF = '<svg viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4V5z"/><p
 /* ======================= boot ======================= */
 var loaded = false;
 function boot() {
-  C.init('langcup-arena');
+  C.init('langcup', 'langcup-arena');
   Stage.mode('title');
   titleIntro();
   var bar = $('#loadbar i');
-  if (bar) bar.style.width = '35%';
-  fetch('data/snippets.txt').then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+  (window.SNIPPETS || fetch('data/snippets.txt').then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); }))
     .then(function (txt) {
       C.loadSnippets(txt);
       loaded = true;
+      if (window.Loader) Loader.tick('Fighters');
       bar.style.width = '100%';
       setTimeout(function () { $('#loadbar').classList.add('done'); }, 350);
       $('#kicker').textContent = C.LANGS.length + ' languages · ' + C.snippetCount() + ' snippets · 1 champion';
@@ -97,8 +97,7 @@ function titleIntro() {
   $$('#logo .l1, #logo .l2').forEach(function (s) {
     s.innerHTML = s.textContent.split('').map(function (ch) { return '<span class="ch">' + ch + '</span>'; }).join('');
   });
-  G.fromTo('#logo .ch', { y: -140, opacity: 0, rotation: function () { return (Math.random() - 0.5) * 70; } },
-    { y: 0, opacity: 1, rotation: 0, duration: 0.75, ease: 'bounce.out', stagger: 0.045 });
+  G.fromTo('#logo .ch', { y: 0, scale: 1 }, { keyframes: [{ y: -18, scale: 1.12, duration: 0.18, ease: 'power2.out' }, { y: 0, scale: 1, duration: 0.5, ease: 'bounce.out' }], stagger: 0.035 });
   G.fromTo('#logo .l3', { letterSpacing: '1.2em', opacity: 0 }, { letterSpacing: '0.32em', opacity: 1, duration: 1.1, delay: 0.6, ease: 'power3.out' });
 }
 
@@ -117,6 +116,7 @@ function openSelect() {
   $('#selback').textContent = C.S ? 'Back' : 'Title';
   refreshSelect();
   show('s-select');
+  fitRoster();
   Stage.mode('select');
   tween('.tile', { y: 24, opacity: 0, scale: 0.85 }, { y: 0, opacity: 1, scale: 1, duration: 0.35, ease: 'back.out(2)', stagger: 0.018 });
 }
@@ -338,7 +338,22 @@ function renderDuel() {
       (S().blind ? 'Fighter ' + (k + 1) + ' wins' : nm(L) + ' wins') + '</button></div>';
   }).join('');
   $('#undopick').hidden = n === 0;
+  requestAnimationFrame(fitCode);
+  $$('#s-match .fcard pre').forEach(function (pre) { pre.addEventListener('scroll', function () { pre.parentNode.classList.toggle('more', pre.scrollTop + pre.clientHeight < pre.scrollHeight - 2); }); });
   tween('#chal, #cards', { opacity: 0 }, { opacity: 1, duration: 0.2 });
+}
+/* Shrinks each snippet's font until it fits its card (down to a readable minimum); past that it scrolls inside. */
+var FIT = { s: [8.5, 12], m: [9, 14], l: [10, 16] };
+function fitCode() {
+  var r = FIT[S().size] || FIT.m;
+  $$('#s-match .fcard').forEach(function (card) {
+    var pre = card.querySelector('pre'), fs = r[1], minW = Math.max(r[0], r[1] - 3);
+    if (!pre) return;
+    pre.style.fontSize = fs + 'px';
+    /* tall code shrinks to the minimum; a few wide lines only shrink a little, then scroll sideways */
+    while ((fs > r[0] && pre.scrollHeight > pre.clientHeight + 1) || (fs > minW && pre.scrollWidth > pre.clientWidth + 1)) { fs -= 0.5; pre.style.fontSize = fs + 'px'; }
+    card.classList.toggle('more', pre.scrollHeight > pre.clientHeight + 1);
+  });
 }
 function enterCards() {
   if (!G || !A.on()) return;
@@ -517,6 +532,7 @@ function renderSettings() {
       row('Speed', 'How fast every animation and fight plays.', seg('speed', [[0.5, '0.5×'], [1, '1×'], [1.5, '1.5×'], [2, '2×'], [3, '3×']])) +
       row('Versus intro', 'The split-screen entrance before each match.', seg('intro', [['full', 'Full'], ['short', 'Short'], ['skip', 'Skip']])) +
       row('Code reveal', 'Snippets type in line by line, or appear at once.', seg('reveal', [['animated', 'Animated'], ['instant', 'Instant']])) +
+      sw('bgMotion', 'Background motion', 'The sky, floor, embers and camera drift. Turn off for a still background; the fighters still move.') +
       sw('shake', 'Screen shake', 'The camera jolts on hits and K.O.s.') +
       sw('flashes', 'Flashes', 'Bright full-screen flashes on hits. Turn off if flashing light bothers you.') +
       sw('autoContinue', 'Auto-advance', 'After a result, go straight to the next fight.') +
@@ -538,6 +554,7 @@ function renderSettings() {
     '</div>' +
     '<div class="sheet panel chamfer"><h3>Tournament</h3>' +
       '<button class="setbtn" data-act="undo-result"' + (last ? '' : ' disabled') + '>Undo last result' + (last ? ' <span class="sub">(' + E(last.label) + ')</span>' : '') + '</button>' +
+      '<a class="setbtn" href="plain/" style="color:inherit;text-decoration:none">Active ultra boring mode <span class="sub">(this tournament on a plain page)</span></a>' +
       '<button class="setbtn" data-act="new">Start a new tournament (choose fighters)</button>' +
       '<button class="setbtn" data-act="forget">Forget seen snippets <span class="sub">(' + C.seenTotal() + ' of ' + (C.CH.length * C.LANGS.length) + ' seen)</span></button>' +
       '<button class="setbtn danger" data-act="reset-settings">Reset settings to defaults</button>' +
@@ -546,7 +563,7 @@ function renderSettings() {
 function openSettings() { renderSettings(); show('s-settings'); }
 function closeSettings() {
   if (before === 's-hub') openHub();
-  else if (before === 's-select') { show('s-select'); Stage.mode('select'); }
+  else if (before === 's-select') { show('s-select'); Stage.mode('select'); fitRoster(); }
   else if (before === 's-match' && cur) { startDuel(); }
   else { show(before === 's-settings' ? 's-title' : before); }
 }
@@ -653,7 +670,22 @@ document.addEventListener('keydown', function (e) {
   } else if (screen === 's-result' && e.key === 'Enter' && $('#contbtn')) continueMatch(false);
   else if (screen === 's-title' && e.key === 'Enter' && loaded) $('#startbtn').click();
 });
-window.addEventListener('resize', function () { if (screen === 's-match' && !busy) setBand(); });
+/* Picks the roster's columns so the 32 tiles fill the space with near-square tiles. */
+function fitRoster() {
+  var el = $('#roster');
+  if (!el || screen !== 's-select') return;
+  var b = el.getBoundingClientRect(), n = C.LANGS.length, gap = 6, best = null;
+  for (var c = 2; c <= 10; c++) {
+    var rows = Math.ceil(n / c), w = (b.width - gap * (c - 1)) / c, h = (b.height - gap * (rows - 1)) / rows;
+    if (h < 34) continue;
+    var score = Math.abs(Math.log(w / h / 1.05));
+    if (!best || score < best.score) best = { c: c, rows: rows, score: score };
+  }
+  if (!best) best = { c: 8, rows: Math.ceil(n / 8) };
+  el.style.gridTemplateColumns = 'repeat(' + best.c + ', minmax(0,1fr))';
+  el.style.gridTemplateRows = 'repeat(' + best.rows + ', minmax(0,1fr))';
+}
+window.addEventListener('resize', function () { if (screen === 's-match' && !busy) { setBand(); fitCode(); } fitRoster(); });
 
 boot();
 })();
