@@ -1,4 +1,4 @@
-/* Language Cup engine: languages, challenges, highlighting, tournament rules, saving. Shared with the Plain page. Exposes one global: Cup. */
+/* Programming Language Cup engine: languages, challenges, highlighting, tournament rules, saving. Shared with the Plain page. Exposes one global: Cup. */
 var Cup = (function () {
 'use strict';
 var VERSION = 2;
@@ -586,7 +586,7 @@ function confirmMatch(m) {
   } else if (m.stage === 'group' && groupComplete(m.group)) text += ' Group ' + m.group + ' is done.';
   else if (m.stage === 'ub') text += ' ' + name(m.loser) + ' drops to the lower bracket.';
   else if (m.stage === 'lb') text += ' ' + name(m.loser) + ' is eliminated.';
-  if (champion()) text = name(m.winner) + ' wins the Language Cup!';
+  if (champion()) text = name(m.winner) + ' wins the Programming Language Cup!';
   return text;
 }
 function undoResult() {

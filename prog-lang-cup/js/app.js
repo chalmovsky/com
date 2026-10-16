@@ -98,6 +98,7 @@ function titleIntro() {
     s.innerHTML = s.textContent.split('').map(function (ch) { return '<span class="ch">' + ch + '</span>'; }).join('');
   });
   G.fromTo('#logo .ch', { y: 0, scale: 1 }, { keyframes: [{ y: -18, scale: 1.12, duration: 0.18, ease: 'power2.out' }, { y: 0, scale: 1, duration: 0.5, ease: 'bounce.out' }], stagger: 0.035 });
+  G.fromTo('#logo .l0', { letterSpacing: '.8em', opacity: 0 }, { letterSpacing: '.2em', opacity: 1, duration: 1, delay: 0.3, ease: 'power3.out' });
   G.fromTo('#logo .l3', { letterSpacing: '1.2em', opacity: 0 }, { letterSpacing: '0.32em', opacity: 1, duration: 1.1, delay: 0.6, ease: 'power3.out' });
 }
 

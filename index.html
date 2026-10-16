@@ -51,6 +51,8 @@ html.wake .cabin .windows{animation:swell 2.6s ease-in-out infinite}
 @keyframes swell{0%,100%{opacity:0}50%{opacity:1}}
 /* 2. titles pop neon, one by one (the .lit class is added in sequence) */
 h1,h2{transform-origin:left center}
+/* on the way back the glow fades title by title, bottom up */
+h1,h2,.titles a,.projects h3 a{transition:color .8s,text-shadow .8s}
 .lit{color:var(--glow)!important;text-shadow:0 0 .12em #fff8,0 0 .5em var(--glow),0 0 1.5em #0f6;
   animation:boom .6s cubic-bezier(.2,1.5,.4,1)}
 a.lit{color:#8dffb0!important;animation-name:boom-text}
@@ -65,7 +67,7 @@ html.snowing #snow{opacity:1}
   background:radial-gradient(120% 90% at 50% -10%,#0f3a2a 0%,#071b16 45%,#03080a 100%)}
 html.dusk .sky{opacity:1}
 html.dusk body{color:#b9ffcf;transition:color 3.5s}
-html.dusk a:not(.lit){color:#8dffb0;transition:color 3.5s}
+html.dusk a:not(.lit){color:#8dffb0;transition:color 3.5s,text-shadow .8s}
 html.dusk footer{color:#7fcf97;transition:color 3.5s}
 html.dusk .cabin img{opacity:0;filter:blur(9px) saturate(1.6);transform:scale(1.12)}
 html.dusk .cabin .frame{box-shadow:none}
@@ -117,7 +119,7 @@ html.unwind .cabin .windows{animation:none;opacity:0}
   </li>
   -->
   <li>
-    <h3><a href="prog-lang-cup/">Language Cup</a></h3>
+    <h3><a href="prog-lang-cup/">Programming Language Cup</a></h3>
     <p>A programming language cup. Groups, upper and lower brackets, one grand final. Every duel is the same task in two languages, and you pick the winner. Smart matchmaking keeps each duel fresh, so all 32 languages get a fair fight across 960 snippets. <a href="prog-lang-cup/">Play now</a> and find your favorite programming language. Prefer it plain? Try <a href="prog-lang-cup/plain/">ultra boring mode</a>. It's <a href="https://github.com/chalmovsky/com/tree/main/prog-lang-cup">open source</a> and runs entirely in your browser: once loaded it plays offline, and your picks never leave your device.</p>
   </li>
 </ul>
@@ -169,16 +171,20 @@ document.getElementById('mail').textContent = ['yes.upgrade887', 'passinbox.com'
     at(afterTitles + 900 + 3600, () => { root.classList.remove('wake'); root.classList.add('night'); });
   };
   const daybreak = () => {
-    root.classList.add('unwind');
-    root.classList.remove('wake', 'dusk', 'night');
-    titles.forEach((el) => el.classList.remove('lit'));
-    stopSnow();
-    // the tilt comes last: wait until every fade on the page has really finished
-    const me = run, tiltBack = () => { if (me !== run) return; root.classList.remove('unwind'); at(250, () => root.classList.remove('level')); };
-    if (!document.getAnimations) return at(2300, tiltBack);
-    requestAnimationFrame(() => requestAnimationFrame(() => Promise.all(document.getAnimations()
-      .filter((a) => a.effect && a.effect.getComputedTiming().endTime !== Infinity)
-      .map((a) => a.finished.catch(() => {}))).then(tiltBack)));
+    root.classList.remove('wake');
+    const lit = titles.filter((el) => el.classList.contains('lit')).reverse();
+    lit.forEach((el, i) => at(i * 260, () => el.classList.remove('lit')));     // glow goes out, bottom up
+    at(lit.length ? (lit.length - 1) * 260 + 700 : 0, () => {
+      root.classList.add('unwind');                              // then the day comes back
+      root.classList.remove('dusk', 'night');
+      stopSnow();
+      // the tilt comes last: wait until every fade on the page has really finished
+      const me = run, tiltBack = () => { if (me !== run) return; root.classList.remove('unwind'); at(250, () => root.classList.remove('level')); };
+      if (!document.getAnimations) return at(2300, tiltBack);
+      requestAnimationFrame(() => requestAnimationFrame(() => Promise.all(document.getAnimations()
+        .filter((a) => a.effect && a.effect.getComputedTiming().endTime !== Infinity)
+        .map((a) => a.finished.catch(() => {}))).then(tiltBack)));
+    });
   };
 
   addEventListener('keydown', (e) => { if (e.key === 'Escape' && on) cabin.click(); });
