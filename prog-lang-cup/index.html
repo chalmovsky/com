@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Language Cup Arena</title>
+<meta name="description" content="A 3D fighting-game tournament for programming languages: pick 4 to 32 fighters, judge 960 code snippets, crown a champion.">
+<link rel="icon" href="/assets/favicon-96x96.png">
+<!-- Privacy-friendly analytics by Plausible -->
+<script async src="https://h.chalmovsky.com/js/pa-TMSyv1D0b2oIpsoIURJS_.js"></script>
+<script>
+  window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
+  plausible.init()
+</script>
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Bungee+Inline&family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="css/arena.css">
+
+</head>
+<body>
+<canvas id="bg" aria-hidden="true"></canvas>
+<div id="bgfallback" aria-hidden="true"></div>
+<div id="scan" aria-hidden="true"></div>
+
+<!-- TITLE -->
+<section class="screen" id="s-title">
+  <div class="mid title-wrap">
+    <div class="kicker" id="kicker">32 languages · 960 snippets · 1 champion</div>
+    <h1 class="logo" id="logo"><span class="l1">LANGUAGE</span><span class="l2">CUP</span><span class="l3">ARENA</span></h1>
+    <div class="loadbar" id="loadbar"><i></i><span id="loadtxt">Loading the fighters…</span></div>
+    <div class="title-btns">
+      <button class="fight start" data-act="start" id="startbtn" disabled>Press start</button>
+      <button class="ghost chamfer" data-act="settings" id="titleset">Settings</button>
+    </div>
+    <p class="hint">Sound is on. On iPhone, turn off silent mode to hear it.</p>
+    <p class="hint links"><a href="plain/">Plain version</a> · <a href="/">chalmovsky.com</a></p>
+  </div>
+</section>
+
+<!-- CHARACTER SELECT -->
+<section class="screen" id="s-select" hidden>
+  <div class="inner">
+    <div class="hud">
+      <div class="grow"><div class="brand">CHOOSE YOUR FIGHTERS</div><div class="phase" id="selcount"></div></div>
+      <button class="icon chamfer" data-act="settings" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg></button>
+    </div>
+    <div class="quick" id="quick"></div>
+    <div class="roster" id="roster"></div>
+    <div class="planline panel chamfer" id="planline"></div>
+    <div class="hub-pad"></div>
+  </div>
+</section>
+<div class="fightbar" id="selbar" hidden><div class="fightbar-in"><button class="ghost chamfer" data-act="sel-back" id="selback">Back</button><button class="fight" id="selgo" data-act="sel-go">Fight!</button></div></div>
+
+<!-- HUB -->
+<section class="screen" id="s-hub" hidden>
+  <div class="inner">
+    <div class="hud">
+      <div class="grow"><div class="brand">LANGUAGE CUP</div><div class="phase" id="phase"></div></div>
+      <button class="icon chamfer" data-act="sound" id="sndbtn" aria-label="Sound on or off"></button>
+      <button class="icon chamfer" data-act="settings" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg></button>
+    </div>
+    <div class="xp"><i id="xpbar"></i></div>
+    <nav class="tabs">
+      <button class="chamfer" data-tab="groups">Groups</button>
+      <button class="chamfer" data-tab="bracket">Bracket</button>
+      <button class="chamfer" data-tab="legends">Legends</button>
+    </nav>
+    <div id="hubbody"></div>
+    <div class="hub-pad"></div>
+  </div>
+</section>
+<div class="fightbar" id="fightbar" hidden><div class="fightbar-in one"><button class="fight" id="fightbtn" data-act="fight"></button></div></div>
+
+<!-- VERSUS -->
+<section class="screen vs" id="s-vs" hidden>
+  <div class="half a" id="vsA"><div class="vbox"><div class="vabbr" id="vsAbbrA"></div><div class="vname" id="vsNameA"></div><div class="vmove" id="vsMoveA"></div></div></div>
+  <div class="half b" id="vsB"><div class="vbox"><div class="vabbr" id="vsAbbrB"></div><div class="vname" id="vsNameB"></div><div class="vmove" id="vsMoveB"></div></div></div>
+  <div class="vsmark"><span id="vsMark">VS</span></div>
+  <div class="vstage" id="vsStage"></div>
+  <button class="vskip" data-act="skip">Skip ▸</button>
+</section>
+
+<!-- MATCH -->
+<section class="screen match" id="s-match" hidden>
+  <div class="inner">
+    <div class="fhud">
+      <div class="fside l" id="fA"></div>
+      <div class="fcenter"><div class="rnd" id="rnd"></div><button class="icon sm chamfer" data-act="leave" aria-label="Back to the tournament"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="fside r" id="fB"></div>
+    </div>
+    <div class="arena-window" id="arenawin"><div class="combo" id="combo"></div></div>
+    <div class="chal" id="chal"><div class="k" id="chalK"></div><h2 id="chalT"></h2><p id="chalD"></p></div>
+    <div class="cards" id="cards"></div>
+    <div class="mfoot"><button class="ghost chamfer" data-act="undo-pick" id="undopick">Undo last pick</button><span class="keys">Keys: 1 / 2 to choose · U to undo</span></div>
+  </div>
+</section>
+
+<!-- RESULT -->
+<section class="screen" id="s-result" hidden>
+  <div class="mid">
+    <div class="res-k" id="resK"></div>
+    <div class="res-name" id="resName"></div>
+    <div class="res-score" id="resScore"></div>
+    <p class="res-stakes" id="resStakes"></p>
+    <ol class="duels" id="resDuels"></ol>
+    <div class="btns" id="resBtns"></div>
+  </div>
+</section>
+
+<!-- CHAMPION -->
+<section class="screen" id="s-champ" hidden>
+  <div class="champ">
+    <div class="kicker">Your champion</div>
+    <div class="champ-name" id="champName"></div>
+    <div class="champ-move" id="champMove"></div>
+    <div class="podium" id="podium"></div>
+    <div class="btns">
+      <button class="fight" data-act="see-bracket">See the bracket</button>
+      <button class="ghost chamfer" data-act="see-legends">See your taste profile</button>
+      <button class="ghost chamfer" data-act="new">New tournament</button>
+    </div>
+  </div>
+</section>
+
+<!-- SETTINGS -->
+<section class="screen" id="s-settings" hidden>
+  <div class="inner narrow">
+    <div class="hud"><div class="grow"><div class="brand">SETTINGS</div><div class="phase">Saved on this device</div></div>
+      <button class="icon chamfer" data-act="close-settings" aria-label="Close settings"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div id="setbody"></div>
+  </div>
+</section>
+
+<div id="banner"><div class="strip"><div class="b1" id="b1"></div><div class="b2" id="b2"></div></div></div>
+<div id="bigtext" aria-hidden="true"></div>
+<div id="flash"></div>
+<div id="toast" role="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/stage.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>

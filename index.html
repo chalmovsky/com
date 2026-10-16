@@ -17,7 +17,7 @@
 <style>
 body{max-width:40em;margin:auto;padding:1em;line-height:1.5;position:relative}
 .projects{display:grid;grid-template-columns:repeat(auto-fill,minmax(15em,1fr));gap:1em;list-style:none;padding:0}
-.projects li{border:1px solid #8884;padding:.8em 1em}
+.projects li{padding:0}
 .projects h3{margin:0 0 .3em;font-size:1em}
 .projects p{margin:0}
 footer{margin-top:3em;font-size:.9em}
@@ -63,7 +63,6 @@ html.snowing #snow{opacity:1}
 html.dusk .sky{opacity:1}
 html.dusk body{color:#b9ffcf;transition:color 3.5s}
 html.dusk a:not(.lit){color:#8dffb0;transition:color 3.5s}
-html.dusk .projects li{border-color:#3cff6e55;box-shadow:0 0 1.2em -.4em var(--glow),inset 0 0 1.5em -1em var(--glow);transition:all 3.5s}
 html.dusk footer{color:#7fcf97;transition:color 3.5s}
 html.dusk .cabin img{opacity:0;filter:blur(9px) saturate(1.6);transform:scale(1.12)}
 html.dusk .cabin .frame{box-shadow:none}
@@ -115,8 +114,8 @@ html.unwind .cabin .windows{animation:none;opacity:0}
   </li>
   -->
   <li>
-    <h3>Language Cup</h3>
-    <p>A tournament to find your favourite programming language. In each duel you see the same task written in two of 32 languages and pick the one you would rather write, across 960 snippets, in a plain version or a 3D fighting-game arena.</p>
+    <h3><a href="prog-lang-cup/">Language Cup</a></h3>
+    <p>A tournament to find your favourite programming language. In each duel you see the same task written in two of 32 languages and pick the one you would rather write, across 960 snippets, in a 3D fighting-game arena or a <a href="prog-lang-cup/plain/">plain version</a>.</p>
   </li>
 </ul>
 </main>
@@ -130,7 +129,7 @@ document.getElementById('mail').textContent = ['yes.upgrade887', 'passinbox.com'
 
 (() => {
   const root = document.documentElement, cabin = document.querySelector('.cabin');
-  const titles = [...document.querySelectorAll('h1, h2, .titles a, .projects h3')];
+  const titles = [...document.querySelectorAll('h1, h2, .titles a, .projects h3 a')];
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let timers = [], on = false;
   const at = (ms, fn) => timers.push(setTimeout(fn, still ? 0 : ms));
