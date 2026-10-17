@@ -37,7 +37,8 @@ var LANGS = [
   { id: 'objc', name: 'Objective-C', color: '#438EFF', abbr: 'OBJC', move: 'Message Send' },
   { id: 'lisp', name: 'Common Lisp', color: '#3FB68B', abbr: 'LISP', move: 'Lambda Lunge' }
 ];
-var CLASSIC = LANGS.slice(0, 16).map(function (l) { return l.id; });
+/* The 16 most used of the 32, going by Stack Overflow's developer survey: the "Most popular 16" quick pick and the default. */
+var POPULAR = ['javascript', 'python', 'typescript', 'bash', 'java', 'csharp', 'cpp', 'c', 'php', 'go', 'rust', 'kotlin', 'lua', 'dart', 'ruby', 'swift'];
 var LMAP = {};
 LANGS.forEach(function (l) { LMAP[l.id] = l; });
 
@@ -639,7 +640,7 @@ function stats() {
 }
 
 return {
-  LANGS: LANGS, LMAP: LMAP, CLASSIC: CLASSIC, CH: CH, CHMAP: CHMAP, CATS: CATS, CATMAP: CATMAP, STORAGE_OK: STORAGE_OK,
+  LANGS: LANGS, LMAP: LMAP, POPULAR: POPULAR, CH: CH, CHMAP: CHMAP, CATS: CATS, CATMAP: CATMAP, STORAGE_OK: STORAGE_OK,
   esc: esc, hl: hl, loadSnippets: loadSnippets, snippet: snippet, snippetCount: snippetCount, init: init, start: start, clear: clear,
   lastPicked: lastPicked, plan: plan, describePlan: describePlan, shuffle: shuffle,
   get S() { return S; }, get HIST() { return HIST; },

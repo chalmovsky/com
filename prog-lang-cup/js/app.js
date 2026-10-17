@@ -107,9 +107,9 @@ var chosen = {};
 function setChosen(ids) { chosen = {}; ids.forEach(function (id) { chosen[id] = true; }); }
 function chosenIds() { return C.LANGS.map(function (l) { return l.id; }).filter(function (id) { return chosen[id]; }); }
 function openSelect() {
-  setChosen(C.S ? C.S.langs : C.lastPicked() || C.CLASSIC);
-  $('#quick').innerHTML = [['all', 'All 32'], ['classic', 'Original 16'], ['new', 'New 16'], ['r8', 'Random 8'], ['r16', 'Random 16'], ['none', 'Clear']]
-    .map(function (q) { return '<button class="chamfer" data-quick="' + q[0] + '">' + q[1] + '</button>'; }).join('');
+  setChosen(C.S ? C.S.langs : C.lastPicked() || C.POPULAR);
+  $('#quick').innerHTML = [['all', 'All 32'], ['popular', 'Most popular 16', 'The 16 most used, going by Stack Overflow\'s developer survey'], ['r8', 'Random 8'], ['r16', 'Random 16'], ['none', 'Clear']]
+    .map(function (q) { return '<button class="chamfer" data-quick="' + q[0] + '"' + (q[2] ? ' title="' + q[2] + '"' : '') + '>' + q[1] + '</button>'; }).join('');
   $('#roster').innerHTML = C.LANGS.map(function (l) {
     return '<button class="tile chamfer" data-tile="' + l.id + '" data-abbr="' + E(l.abbr) + '" style="--c:' + l.color + '" aria-pressed="false">' +
       '<span class="chk">✓</span><span class="tn">' + E(l.name) + '</span><span class="tm">' + E(l.move) + '</span></button>';
@@ -584,7 +584,7 @@ document.addEventListener('click', function (e) {
   var q = e.target.closest('[data-quick]');
   if (q) {
     var k = q.getAttribute('data-quick'), all = C.LANGS.map(function (l) { return l.id; });
-    setChosen(k === 'all' ? all : k === 'none' ? [] : k === 'classic' ? C.CLASSIC : k === 'new' ? all.slice(16) : C.shuffle(all).slice(0, k === 'r8' ? 8 : 16));
+    setChosen(k === 'all' ? all : k === 'none' ? [] : k === 'popular' ? C.POPULAR : C.shuffle(all).slice(0, k === 'r8' ? 8 : 16));
     Snd.play('tick'); refreshSelect();
     tween('.tile.on', { scale: 0.85 }, { scale: 1, duration: 0.3, stagger: 0.01, ease: 'back.out(3)' });
     return;
