@@ -15084,7 +15084,7 @@ function setChosen(ids) { chosen = {}; ids.forEach(function (id) { chosen[id] = 
 function chosenIds() { return C.LANGS.map(function (l) { return l.id; }).filter(function (id) { return chosen[id]; }); }
 function setup() {
   view = 'setup';
-  var ids = chosenIds(), n = ids.length, h = '<h1>Plain Programming Language Cup</h1>' + '<p class="small"><b>Active ultra boring mode.</b> Same tournament as the Arena. Your progress saves automatically in this browser\'s local storage. <a href="../">Back to the 3D Arena</a> · <a href="/">chalmovsky.com</a></p>';
+  var ids = chosenIds(), n = ids.length, h = '<h1>Plain Programming Language Cup</h1>' + '<p class="small"><b>Active ultra boring mode.</b> Same tournament as the Arena. Your progress saves automatically in this browser\'s local storage. <a href="../">Try the 3D Arena</a> · <a href="/">chalmovsky.com</a></p>';
   if (msg) h += '<p class="note">' + E(msg) + '</p>';
   h += '<p>Pick the languages for a new tournament (4 to 32). In every duel you see the same task written in two languages and pick the one you prefer.</p>';
   h += '<p class="quick small">Quick picks: ' + [['all', 'All 32'], ['none', 'None'], ['classic', 'Original 16'], ['new', 'New 16'], ['r8', 'Random 8'], ['r16', 'Random 16']]
@@ -15150,7 +15150,7 @@ function roundTable(title, ids) {
 function home() {
   view = 'home';
   if (!C.S) { setChosen(C.lastPicked() || C.CLASSIC); return setup(); }
-  var S = C.S, pr = C.progress(), ch = C.podium(), n = C.nextMatch(), h = '<h1>Plain Programming Language Cup</h1>' + '<p class="small"><b>Active ultra boring mode.</b> Same tournament as the Arena. Your progress saves automatically in this browser\'s local storage. <a href="../">Back to the 3D Arena</a> · <a href="/">chalmovsky.com</a></p>';
+  var S = C.S, pr = C.progress(), ch = C.podium(), n = C.nextMatch(), h = '<h1>Plain Programming Language Cup</h1>' + '<p class="small"><b>Active ultra boring mode.</b> Same tournament as the Arena. Your progress saves automatically in this browser\'s local storage. <a href="../">Try the 3D Arena</a> · <a href="/">chalmovsky.com</a></p>';
   if (!C.STORAGE_OK) h += '<p class="note">This browser is blocking storage, so progress will not be saved.</p>';
   if (msg) h += '<p class="note">' + E(msg) + '</p>';
   h += '<p>' + pr.phase + ', ' + pr.done + ' of ' + pr.total + ' matches played · ' + S.langs.length + ' languages.</p>';
