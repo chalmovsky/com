@@ -81,7 +81,15 @@ html.night .lit{animation:none}
 html.unwind *{transition-duration:2s!important}
 html.unwind .cabin .windows{animation:none;opacity:0}
 @media (prefers-reduced-motion:reduce){.cabin .windows,.lit,#snow{animation:none!important}html *{transition-duration:.01s!important}}
-@media (max-width:36em){.cabin{float:none;width:100%;margin:0 0 1.5em}.cabin .frame{transform:none}}
+/* phones: the cabin sits on top as a wide crop with a gentle tilt; the glow must not widen the page */
+@media (max-width:36em){
+  html,body{overflow-x:hidden}
+  @supports (overflow:clip){html,body{overflow-x:clip}}
+  .cabin{float:none;width:100%;aspect-ratio:4/3;margin:.6em 0 .4em}
+  .cabin .frame{transform:rotate(1.5deg)}
+  html.level .cabin .frame{transform:none}
+  h1{margin-top:.9em}
+}
 </style>
 
 <div class="sky"></div>
