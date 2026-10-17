@@ -392,6 +392,7 @@ function start(langs) {
   if (langs.length < 4) return false;
   store.set(PKEY, langs);
   S = newState(langs); HIST = []; save(); saveHist();
+  report('Cup started', { size: String(langs.length) });
   return true;
 }
 function clear() { S = null; HIST = []; store.del(KEY); saveHist(); }
@@ -579,6 +580,12 @@ function confirmMatch(m) {
   m.winner = sc[0] > sc[1] ? a : b;
   m.loser = m.winner === a ? b : a;
   save();
+  m.picks.forEach(function (w, i) {
+    var c = CHMAP[m.games[i]];
+    report('Duel', { winner: name(w), loser: name(w === a ? b : a), task: c.title, category: CATMAP[c.cat].name, stage: STAGE_NAME[m.stage] || m.stage });
+  });
+  var pd = podium();
+  if (pd) report('Cup finished', { champion: name(pd.first), runner_up: name(pd.second), third: pd.third ? name(pd.third) : '', size: String(S.langs.length) });
   var hi = Math.max(sc[0], sc[1]), lo = Math.min(sc[0], sc[1]);
   var text = name(m.winner) + ' beat ' + name(m.loser) + ' ' + hi + '–' + lo + '.';
   if (m.stage === 'group' && groupsComplete()) {
@@ -588,6 +595,16 @@ function confirmMatch(m) {
   else if (m.stage === 'lb') text += ' ' + name(m.loser) + ' is eliminated.';
   if (champion()) text = name(m.winner) + ' wins the Programming Language Cup!';
   return text;
+}
+/* Anonymous results for the site's own Plausible stats: one Duel event per duel once its match is
+   confirmed, plus Cup started and Cup finished. Does nothing where Plausible isn't loaded. */
+var STAGE_NAME = { group: 'Group', ub: 'Upper bracket', lb: 'Lower bracket', gf: 'Grand final' };
+function report(event, props) {
+  try {
+    if (typeof window === 'undefined' || typeof window.plausible !== 'function') return;
+    props.mode = /\/plain\//.test(location.pathname) ? 'Plain' : '3D';
+    window.plausible(event, { props: props });
+  } catch (e) { /* stats must never break the game */ }
 }
 function undoResult() {
   var h = HIST.pop();
