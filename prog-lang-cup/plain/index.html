@@ -64,6 +64,7 @@ table.t{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px;li
 
 /* setup */
 .picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:2px 12px;margin:.6em 0 1em;padding:.6em .7em;border:1px solid var(--line)}
+.autonext{display:inline-flex;align-items:center;gap:.4em;cursor:pointer}
 .picker label{display:flex;align-items:center;gap:.4em;padding:.2em 0;cursor:pointer}
 .picker input{width:1.05em;height:1.05em;margin:0}
 .quick a{margin-right:.9em;white-space:nowrap}
@@ -15068,6 +15069,7 @@ return {
 <script>
 (function () {
 var C = Cup, E = C.esc, app = document.getElementById('app'), msg = '', current = null, view = 'home';
+var AUTO_KEY = 'langcup:plain-autonext:v1', autoNext = C.store.get(AUTO_KEY) === true;
 C.loadSnippets(document.getElementById('snippets').textContent);
 C.init('langcup', 'langcup-plain');
 var TOTAL = C.CH.length * C.LANGS.length;
@@ -15197,8 +15199,9 @@ function match(id) {
   if (!r.ok) { msg = r.reason; current = null; return home(); }
   view = 'match'; current = id;
   var m = r.m, a = r.a, b = r.b, s = C.score(m, a, b), n = m.picks.length;
-  var h = '<p>' + link('data-a="home"', '← Back to the tournament') + '</p>' +
-    '<h1>' + nm(a) + ' ' + s[0] + '–' + s[1] + ' ' + nm(b) + '</h1><p class="muted">' + E(m.label) + ' · first to ' + C.need(m) + '.</p>';
+  var h = '<p>' + link('data-a="home"', '← Back to the tournament') + '</p>' + (msg ? '<p class="note">' + E(msg) + '</p>' : '') +
+    '<h1>' + nm(a) + ' ' + s[0] + '–' + s[1] + ' ' + nm(b) + '</h1><p class="muted">' + E(m.label) + ' · first to ' + C.need(m) + '.</p>' +
+    '<p class="small"><label class="autonext"><input type="checkbox" id="autonext" data-autonext' + (autoNext ? ' checked' : '') + '> Automatically go to the next match</label></p>';
   if (m.done || C.finished(m)) {
     h += '<ol class="duels">' + m.picks.map(function (p, i) {
       var c = C.CHMAP[m.games[i]];
@@ -15228,8 +15231,17 @@ function show(st) {
 }
 addEventListener('popstate', function (e) { show(e.state); scrollTo(0, 0); });
 
+/* After a match is locked in: straight into the next one when the box is ticked, else back to the tournament. */
+function afterMatch() {
+  current = null;
+  var next = autoNext && !C.champion() && C.nextMatch();
+  if (next) { var st = { v: 'match', id: next.id }; if (history.state && history.state.v === 'match') history.replaceState(st, ''); else history.pushState(st, ''); return match(next.id); }
+  if (!leave()) home();
+}
+
 document.addEventListener('change', function (e) {
   var t = e.target;
+  if (t.hasAttribute && t.hasAttribute('data-autonext')) { autoNext = t.checked; C.store.set(AUTO_KEY, autoNext); return; }
   if (!t.hasAttribute || !t.hasAttribute('data-lang')) return;
   chosen[t.getAttribute('data-lang')] = t.checked;
   refreshSetupControls();
@@ -15251,7 +15263,7 @@ document.addEventListener('click', function (e) {
     var m = C.S.matches[current];
     C.pick(m, t.getAttribute('data-pick'));
     if (!C.finished(m)) { match(current); scrollTo(0, 0); return; }
-    msg = C.confirmMatch(m); current = null; if (!leave()) home(); scrollTo(0, 0); return;
+    msg = C.confirmMatch(m); afterMatch(); scrollTo(0, 0); return;
   }
   if (a === 'home') { current = null; if (!leave()) home(); }
   else if (a === 'setup') { enter({ v: 'setup' }); setChosen(C.S ? C.S.langs : C.lastPicked() || C.CLASSIC); setup(); }
@@ -15261,7 +15273,7 @@ document.addEventListener('click', function (e) {
     }
     if (C.start(chosenIds())) { if (!leave()) home(); }
   }
-  else if (a === 'finish') { msg = C.confirmMatch(C.S.matches[current]); current = null; if (!leave()) home(); }
+  else if (a === 'finish') { msg = C.confirmMatch(C.S.matches[current]); afterMatch(); }
   else if (a === 'undopick') { C.undoPick(C.S.matches[current]); match(current); }
   else if (a === 'undo') { var h = C.undoResult(); if (h) { C.undoPick(C.S.matches[h.id]); enter({ v: 'match', id: h.id }); match(h.id); } }
   else if (a === 'forget') {
