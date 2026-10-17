@@ -15201,6 +15201,16 @@ function match(id) {
   app.innerHTML = h;
 }
 
+/* Browser history: opening a match or the language picker is a step, so Back returns to the tournament. */
+function enter(st) { var h = history.state; if (!h || h.v !== st.v || h.id !== st.id) history.pushState(st, ''); }
+function leave() { if (history.state && history.state.v) { history.back(); return true; } return false; }
+function show(st) {
+  if (st && st.v === 'match' && C.S && C.S.matches[st.id]) return match(st.id);
+  if (st && st.v === 'setup') { setChosen(C.S ? C.S.langs : C.lastPicked() || C.CLASSIC); return setup(); }
+  current = null; home();
+}
+addEventListener('popstate', function (e) { show(e.state); scrollTo(0, 0); });
+
 document.addEventListener('change', function (e) {
   var t = e.target;
   if (!t.hasAttribute || !t.hasAttribute('data-lang')) return;
@@ -15219,31 +15229,31 @@ document.addEventListener('click', function (e) {
       C.shuffle(all).slice(0, q === 'r8' ? 8 : 16));
     return setup();
   }
-  if (t.hasAttribute('data-open')) { match(t.getAttribute('data-open')); scrollTo(0, 0); return; }
+  if (t.hasAttribute('data-open')) { enter({ v: 'match', id: t.getAttribute('data-open') }); match(t.getAttribute('data-open')); scrollTo(0, 0); return; }
   if (t.hasAttribute('data-pick')) {
     var m = C.S.matches[current];
     C.pick(m, t.getAttribute('data-pick'));
     if (!C.finished(m)) { match(current); scrollTo(0, 0); return; }
-    msg = C.confirmMatch(m); current = null; home(); scrollTo(0, 0); return;
+    msg = C.confirmMatch(m); current = null; if (!leave()) home(); scrollTo(0, 0); return;
   }
-  if (a === 'home') { current = null; home(); }
-  else if (a === 'setup') { setChosen(C.S ? C.S.langs : C.lastPicked() || C.CLASSIC); setup(); }
+  if (a === 'home') { current = null; if (!leave()) home(); }
+  else if (a === 'setup') { enter({ v: 'setup' }); setChosen(C.S ? C.S.langs : C.lastPicked() || C.CLASSIC); setup(); }
   else if (a === 'start') {
     if (C.S && C.progress().done > 0 && !C.champion() && t.textContent.indexOf('Really') !== 0) {
       t.textContent = 'Really start over? This ends the current tournament (' + C.progress().done + ' matches played)'; return;
     }
-    if (C.start(chosenIds())) home();
+    if (C.start(chosenIds())) { if (!leave()) home(); }
   }
-  else if (a === 'finish') { msg = C.confirmMatch(C.S.matches[current]); current = null; home(); }
+  else if (a === 'finish') { msg = C.confirmMatch(C.S.matches[current]); current = null; if (!leave()) home(); }
   else if (a === 'undopick') { C.undoPick(C.S.matches[current]); match(current); }
-  else if (a === 'undo') { var h = C.undoResult(); if (h) { C.undoPick(C.S.matches[h.id]); match(h.id); } }
+  else if (a === 'undo') { var h = C.undoResult(); if (h) { C.undoPick(C.S.matches[h.id]); enter({ v: 'match', id: h.id }); match(h.id); } }
   else if (a === 'forget') {
     if (t.textContent !== 'Click again to forget') { t.textContent = 'Click again to forget'; return; }
     C.forgetSeen(); home();
   }
   scrollTo(0, 0);
 });
-home();
+show(history.state);
 })();
 </script>
 </body>
