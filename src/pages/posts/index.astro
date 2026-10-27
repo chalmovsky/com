@@ -1,0 +1,15 @@
+---
+import Base from '../../layouts/Base.astro';
+import PostList from '../../components/PostList.astro';
+---
+<Base title="Posts · Chalmovský" description="All posts by Chalmovský, newest first.">
+<style is:inline slot="head">body{max-width:40em;margin:auto;padding:1em;line-height:1.5}</style>
+<main>
+
+<h1>Posts</h1>
+<p>Subscribe with <a href="/feed.xml">RSS</a>.</p>
+<PostList />
+
+<p><a href="/">← home</a></p>
+</main>
+</Base>

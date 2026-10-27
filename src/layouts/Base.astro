@@ -1,22 +1,32 @@
+---
+// The page shell every page shares: head, icons, feed link and analytics.
+// Page-specific <style> goes in the "head" slot.
+interface Props {
+  title: string;
+  description: string;
+}
+const { title, description } = Astro.props;
+---
 <!doctype html>
 <html lang="en">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width">
 <meta name="color-scheme" content="light dark">
-<title>Not found</title>
-<meta name="description" content="This page does not exist.">
+<title>{title}</title>
+<meta name="description" content={description}>
 <link rel="icon" href="/assets/favicon-96x96.png">
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
 <link rel="alternate" type="application/rss+xml" title="Chalmovský" href="/feed.xml">
 <!-- Privacy-friendly analytics by Plausible -->
-<script async src="https://h.chalmovsky.com/js/pa-TMSyv1D0b2oIpsoIURJS_.js"></script>
-<script>
+<script is:inline async src="https://h.chalmovsky.com/js/pa-TMSyv1D0b2oIpsoIURJS_.js"></script>
+<script is:inline>
   window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
   plausible.init()
 </script>
-<style>body{max-width:40em;margin:auto;padding:1em;line-height:1.5} pre{overflow-x:auto;padding:.5em;border:1px solid #8884} img{max-width:100%;height:auto}</style>
-
-<main>
-<h1>Not found</h1>
-<p>There is nothing at this address. Try the <a href="/">home page</a>.</p>
-</main>
+<slot name="head" />
+</head>
+<body>
+<slot />
+</body>
+</html>

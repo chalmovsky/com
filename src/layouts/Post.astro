@@ -1,0 +1,14 @@
+---
+// A post or any other plain text page: narrow column, readable code blocks and images.
+import Base from './Base.astro';
+
+interface Props {
+  title: string;
+  description: string;
+}
+const { title, description } = Astro.props;
+---
+<Base title={title} description={description}>
+<style is:inline slot="head">body{max-width:40em;margin:auto;padding:1em;line-height:1.5} pre{overflow-x:auto;padding:.5em;border:1px solid #8884} img{max-width:100%;height:auto}</style>
+<slot />
+</Base>

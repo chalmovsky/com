@@ -1,0 +1,3 @@
+# Run Astro on Bun, not Node: `bun run dev`, `bun run build`
+[run]
+bun = true

@@ -1,20 +1,9 @@
-<!doctype html>
-<html lang="en">
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width">
-<meta name="color-scheme" content="light dark">
-<title>Chalmovský</title>
-<meta name="description" content="Personal site of Chalmovský: posts on software, tools, and the occasional detour. Click the cabin.">
-<link rel="icon" href="assets/favicon-96x96.png">
-<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="alternate" type="application/rss+xml" title="Chalmovský" href="feed.xml">
-<!-- Privacy-friendly analytics by Plausible -->
-<script async src="https://h.chalmovsky.com/js/pa-TMSyv1D0b2oIpsoIURJS_.js"></script>
-<script>
-  window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
-  plausible.init()
-</script>
-<style>
+---
+import Base from '../layouts/Base.astro';
+import PostList from '../components/PostList.astro';
+---
+<Base title="Chalmovský" description="Personal site of Chalmovský: posts on software, tools, and the occasional detour. Click the cabin.">
+<style is:inline slot="head">
 body{max-width:40em;margin:auto;padding:1em;line-height:1.5;position:relative}
 .projects{display:grid;grid-template-columns:repeat(auto-fill,minmax(15em,1fr));gap:1em;list-style:none;padding:0}
 .projects li{padding:0}
@@ -109,13 +98,7 @@ html.unwind .cabin .windows{animation:none;opacity:0}
 
 <h2 id="posts">Posts</h2>
 <p>Subscribe with <a href="feed.xml">RSS</a>.</p>
-<!-- The 3 newest posts, filled in from posts/*.html by .github/build_posts.py on deploy. -->
-<ul class="titles">
-  <!-- posts limit=3 -->
-  <li>2026-03-29 <a href="/posts/samsung-magician.html">Samsung Magician disk utility takes 18 steps and two Recovery Mode reboots to uninstall</a></li>
-  <li>2026-02-15 <a href="/posts/waiting-for-the-miracle-to-come.html">Waiting for the Miracle to Come</a></li>
-  <!-- /posts -->
-</ul>
+<PostList limit={3} />
 <p><a href="posts/">All posts →</a></p>
 
 <h2 id="projects">Projects</h2>
@@ -128,7 +111,7 @@ html.unwind .cabin .windows{animation:none;opacity:0}
   -->
   <li>
     <h3><a href="prog-lang-cup/plain/">Programming Language Cup</a></h3>
-    <p>A programming language cup. Groups, upper and lower brackets, one grand final. Every duel is the same task in two languages, and you pick the winner. Smart matchmaking keeps each duel fresh, so all 32 languages get a fair fight across 960 snippets. <a href="prog-lang-cup/plain/">Play now</a> and find your favorite programming language. Feeling brave? Try the <a href="prog-lang-cup/">not super tested 3D version</a>. It's <a href="https://github.com/chalmovsky/com/tree/main/prog-lang-cup">open source</a> and runs entirely in your browser.</p>
+    <p>A programming language cup. Groups, upper and lower brackets, one grand final. Every duel is the same task in two languages, and you pick the winner. Smart matchmaking keeps each duel fresh, so all 32 languages get a fair fight across 960 snippets. <a href="prog-lang-cup/plain/">Play now</a> and find your favorite programming language. Feeling brave? Try the <a href="prog-lang-cup/">not super tested 3D version</a>. It's <a href="https://github.com/chalmovsky/com/tree/main/public/prog-lang-cup">open source</a> and runs entirely in your browser.</p>
   </li>
   <li>
     <h3><a href="https://github.com/chalmovsky/serverus-sshnape">Serverus SSHnape</a></h3>
@@ -145,7 +128,7 @@ html.unwind .cabin .windows{animation:none;opacity:0}
   <p>Contact: <span id="mail"></span></p>
 </footer>
 
-<script>
+<script is:inline>
 document.getElementById('mail').textContent = ['yes.upgrade887', 'passinbox.com'].join('@');
 
 (() => {
@@ -213,3 +196,4 @@ document.getElementById('mail').textContent = ['yes.upgrade887', 'passinbox.com'
   });
 })();
 </script>
+</Base>

@@ -1,0 +1,26 @@
+---
+import { render } from 'astro:content';
+import Post from '../../layouts/Post.astro';
+import { getPosts, ymd } from '../../posts';
+
+export async function getStaticPaths() {
+  return (await getPosts()).map((post) => ({ params: { id: post.id }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+---
+<Post title={post.data.title} description={post.data.description}>
+<main>
+
+<h1>{post.data.title}</h1>
+<p><i>{ymd(post.data.date)}</i></p>
+
+<Content />
+
+</main>
+
+<footer>
+<p><a href="/posts/">← Posts</a></p>
+</footer>
+</Post>
