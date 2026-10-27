@@ -1,5 +1,5 @@
 // Posts live in src/content/posts/*.md. The file name is the URL:
-// src/content/posts/my-post.md is published at /posts/my-post.html,
+// src/content/posts/my-post.md is published at /posts/my-post,
 // listed on the home page and the Posts page, and added to feed.xml.
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';

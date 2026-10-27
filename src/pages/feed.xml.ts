@@ -7,12 +7,15 @@ export async function GET(context: APIContext) {
     title: 'Chalmovský',
     description: 'Posts by Chalmovský',
     site: context.site!,
+    trailingSlash: false,
     xmlns: { atom: 'http://www.w3.org/2005/Atom' },
     customData: '<language>en</language><atom:link href="https://chalmovsky.com/feed.xml" rel="self" type="application/rss+xml"/>',
     items: (await getPosts()).map((post) => ({
       title: post.data.title,
       description: post.data.description,
-      link: `/posts/${post.id}.html`,
+      link: `/posts/${post.id}`,
+      // the .html address the posts were first published under, so readers don't see them as new
+      customData: `<guid isPermaLink="true">${context.site}posts/${post.id}.html</guid>`,
       // noon UTC, as the old feed had it, so readers don't see the dates move
       pubDate: new Date(post.data.date.getTime() + 12 * 3600 * 1000),
     })),

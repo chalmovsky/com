@@ -8,5 +8,5 @@ interface Props {
 const posts = (await getPosts()).slice(0, Astro.props.limit);
 ---
 <ul class="titles">
-  {posts.map((post) => <li>{ymd(post.data.date)} <a href={`/posts/${post.id}.html`}>{post.data.title}</a></li>)}
+  {posts.map((post) => <li>{ymd(post.data.date)} <a href={`/posts/${post.id}`}>{post.data.title}</a></li>)}
 </ul>
