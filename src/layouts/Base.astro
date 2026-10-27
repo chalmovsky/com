@@ -24,6 +24,19 @@ const { title, description } = Astro.props;
   window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
   plausible.init()
 </script>
+<style is:inline>
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+/* dark mode follows the device, with the same colors in every browser */
+@media (prefers-color-scheme:dark){
+  html{background:#121212;color:#e8e8e8}
+  a{color:#9db8ff}a:visited{color:#c8a6ff}
+}
+/* phones: larger text, and a title that doesn't fill the whole screen */
+@media (max-width:36em){
+  body{font-size:1.1875em}
+  h1{font-size:1.6em;line-height:1.25}
+}
+</style>
 <slot name="head" />
 </head>
 <body>
