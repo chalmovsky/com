@@ -29,6 +29,8 @@ const { title, description, canonical } = Astro.props;
 </script>
 <style is:inline>
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%;font-family:Charter,'Bitstream Charter','Sitka Text',Cambria,serif}
+/* long paths and words wrap instead of widening the page (phones then zoom the whole page out) */
+body{overflow-wrap:break-word}:not(pre)>code{overflow-wrap:anywhere}
 /* dark mode follows the device, with the same colors in every browser */
 @media (prefers-color-scheme:dark){
   html{background:#121212;color:#e8e8e8}
