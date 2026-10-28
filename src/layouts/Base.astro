@@ -2,49 +2,93 @@
 // The page shell every page shares: head, icons, feed link and analytics.
 // Page-specific <style> goes in the "head" slot.
 interface Props {
-  title: string;
-  description: string;
-  /** The preferred URL of this page, for search engines. */
-  canonical?: string;
+    title: string;
+    description?: string;
+    /** The preferred URL of this page, for search engines. */
+    canonical?: string;
 }
 const { title, description, canonical } = Astro.props;
 ---
+
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width">
-<meta name="color-scheme" content="light dark">
-<title>{title}</title>
-<meta name="description" content={description}>
-{canonical && <link rel="canonical" href={new URL(canonical, Astro.site)}>}
-<link rel="icon" href="/assets/favicon-96x96.png">
-<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-<link rel="alternate" type="application/rss+xml" title="Chalmovský" href="/feed.xml">
-<!-- Privacy-friendly analytics by Plausible -->
-<script is:inline async src="https://h.chalmovsky.com/js/pa-TMSyv1D0b2oIpsoIURJS_.js"></script>
-<script is:inline>
-  window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
-  plausible.init()
-</script>
-<style is:inline>
-html{-webkit-text-size-adjust:100%;text-size-adjust:100%;font-family:Charter,'Bitstream Charter','Sitka Text',Cambria,serif}
-/* long paths and words wrap instead of widening the page (phones then zoom the whole page out) */
-body{overflow-wrap:break-word}:not(pre)>code{overflow-wrap:anywhere}
-/* dark mode follows the device, with the same colors in every browser */
-@media (prefers-color-scheme:dark){
-  html{background:#121212;color:#e8e8e8}
-  a{color:#9db8ff}a:visited{color:#c8a6ff}
-}
-/* phones: larger text, and a title that doesn't fill the whole screen */
-@media (max-width:36em){
-  body{font-size:1.1875em}
-  h1{font-size:1.6em;line-height:1.25}
-}
-</style>
-<slot name="head" />
-</head>
-<body>
-<slot />
-</body>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width" />
+        <meta name="color-scheme" content="light dark" />
+        <title>{title}</title>
+        {description && <meta name="description" content={description} />}
+        {canonical && (
+            <link rel="canonical" href={new URL(canonical, Astro.site)} />
+        )}
+        <link rel="icon" href="/assets/favicon-96x96.png" />
+        <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+        <link
+            rel="alternate"
+            type="application/rss+xml"
+            title="Chalmovský"
+            href="/feed.xml"
+        />
+        <!-- Privacy-friendly analytics by Plausible -->
+        <script
+            is:inline
+            async
+            src="https://h.chalmovsky.com/js/pa-TMSyv1D0b2oIpsoIURJS_.js"
+        ></script>
+        <script is:inline>
+            ((window.plausible =
+                window.plausible ||
+                function () {
+                    (plausible.q = plausible.q || []).push(arguments);
+                }),
+                (plausible.init =
+                    plausible.init ||
+                    function (i) {
+                        plausible.o = i || {};
+                    }));
+            plausible.init();
+        </script>
+        <style is:inline>
+            html {
+                -webkit-text-size-adjust: 100%;
+                text-size-adjust: 100%;
+                font-family:
+                    Charter, "Bitstream Charter", "Sitka Text", Cambria, serif;
+            }
+            /* long paths and words wrap instead of widening the page (phones then zoom the whole page out) */
+            body {
+                overflow-wrap: break-word;
+            }
+            :not(pre) > code {
+                overflow-wrap: anywhere;
+            }
+            /* dark mode follows the device, with the same colors in every browser */
+            @media (prefers-color-scheme: dark) {
+                html {
+                    background: #121212;
+                    color: #e8e8e8;
+                }
+                a {
+                    color: #9db8ff;
+                }
+                a:visited {
+                    color: #c8a6ff;
+                }
+            }
+            /* phones: larger text, and a title that doesn't fill the whole screen */
+            @media (max-width: 36em) {
+                body {
+                    font-size: 1.1875em;
+                }
+                h1 {
+                    font-size: 1.6em;
+                    line-height: 1.25;
+                }
+            }
+        </style>
+        <slot name="head" />
+    </head>
+    <body>
+        <slot />
+    </body>
 </html>

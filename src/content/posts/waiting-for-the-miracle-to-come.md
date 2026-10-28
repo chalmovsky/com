@@ -1,6 +1,5 @@
 ---
 title: "Waiting for the Miracle to Come"
-description: "On the feeling that the real life is still coming — and the bargain you strike with yourself by never fully committing."
 date: 2026-02-15
 ---
 
