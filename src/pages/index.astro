@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import PostList from '../components/PostList.astro';
+import Bloatberg from '../components/Bloatberg.astro';
 ---
 <Base title="Chalmovský" description="Personal site of Chalmovský: posts on software, tools, and the occasional detour. Click the cabin.">
 <style is:inline slot="head">
@@ -95,6 +96,7 @@ html.unwind .cabin .windows{animation:none;opacity:0}
   </span>
 </button>
 <h1>Chalmovský</h1>
+<Bloatberg where="home" />
 
 <h2 id="posts">Posts</h2>
 <p>Subscribe with <a href="feed.xml">RSS</a>.</p>
@@ -109,6 +111,10 @@ html.unwind .cabin .windows{animation:none;opacity:0}
     <p>One or two sentences on what it is and who it is for.</p>
   </li>
   -->
+  <li>
+    <h3><a href="https://bloatberg.com">Bloatberg</a></h3>
+    <p>Satirical tech news, built to look like a real, well-funded outlet and to beat one technologically. Zero JavaScript.</p>
+  </li>
   <li>
     <h3><a href="prog-lang-cup/plain/">Programming Language Cup</a></h3>
     <p>A programming language cup. Groups, upper and lower brackets, one grand final. Every duel is the same task in two languages, and you pick the winner. Smart matchmaking keeps each duel fresh, so all 32 languages get a fair fight across 960 snippets. <a href="prog-lang-cup/plain/">Play now</a> and find your favorite programming language. Feeling brave? Try the <a href="prog-lang-cup/">not super tested 3D version</a>. It's <a href="https://github.com/chalmovsky/com/tree/main/public/prog-lang-cup">open source</a> and runs entirely in your browser.</p>

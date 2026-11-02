@@ -1,6 +1,7 @@
 ---
 import { render } from 'astro:content';
 import Post from '../../layouts/Post.astro';
+import Bloatberg from '../../components/Bloatberg.astro';
 import { getPosts, ymd } from '../../posts';
 
 export async function getStaticPaths() {
@@ -17,6 +18,8 @@ const { Content } = await render(post);
 <p><i>{ymd(post.data.date)}</i></p>
 
 <Content />
+
+{post.id === 'wtf-ubuntu' && <Bloatberg where="post" />}
 
 </main>
 
