@@ -33,4 +33,4 @@ I can't express how crazy this is. I didn't have time to migrate my services and
 about this, so I had to take all my servers that run Ubuntu offline.
 
 Oh and btw, distros run by volunteers (Debian, Arch, Alpine...) hve shipped the fix. Meanwhile Ubuntu,
-made by a company that sells security subscriptions, hasn't. This is true as of 2026/11/02.
+made by a company that sells security subscriptions, hasn't. This is true as of 2026-11-02 14:48 UTC.
