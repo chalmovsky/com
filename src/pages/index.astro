@@ -1,7 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
 import PostList from "../components/PostList.astro";
-import Bloatberg from "../components/Bloatberg.astro";
 ---
 
 <Base
@@ -32,6 +31,34 @@ import Bloatberg from "../components/Bloatberg.astro";
         }
         .projects p {
             margin: 0;
+        }
+        /* "New:" line in SecondGlow's violet-to-cyan, darker stops on light backgrounds */
+        .new {
+            --from: #6a45b8;
+            --to: #1f8499;
+        }
+        .new b,
+        .new a {
+            background: linear-gradient(90deg, var(--from), var(--to));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: var(--from);
+        }
+        .new a {
+            font-weight: bold;
+            text-decoration: underline;
+            text-decoration-color: var(--from);
+        }
+        @media (prefers-color-scheme: dark) {
+            .new {
+                --from: #a888f0;
+                --to: #5fd0e6;
+            }
+        }
+        html.dusk .new {
+            --from: #a888f0;
+            --to: #5fd0e6;
         }
         footer {
             margin-top: 3em;
@@ -389,7 +416,10 @@ import Bloatberg from "../components/Bloatberg.astro";
             </span>
         </button>
         <h1>Chalmovský</h1>
-        <Bloatberg where="home" />
+        <p class="new">
+            <b>New:</b> <a href="https://secondglow.app">SecondGlow</a>. Turn
+            your 5K iMac into an external monitor with nothing but software.
+        </p>
 
         <h2 id="posts">Posts</h2>
         <PostList limit={3} />
@@ -405,6 +435,19 @@ import Bloatberg from "../components/Bloatberg.astro";
     <p>One or two sentences on what it is and who it is for.</p>
   </li>
   -->
+            <li>
+                <h3>
+                    <a href="https://secondglow.app">SecondGlow</a>
+                </h3>
+                <p>
+                    Turn your 5K iMac into an external monitor with only
+                    software. Two small apps and one USB cable, and your Apple
+                    silicon Mac drives the iMac as a sharp 5K display again.
+                    Free for 7 days, then{" "}
+                    <a href="https://secondglow.app/#pricing">buy it</a>, if you
+                    like it.
+                </p>
+            </li>
             <li>
                 <h3>
                     <a href="https://bloatberg.com">Bloatberg</a>

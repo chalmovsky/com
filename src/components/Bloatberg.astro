@@ -1,23 +1,15 @@
 ---
-// A one-line plug for Bloatberg. Used at the end of the wtf-ubuntu post and at the top of
-// the home page; delete this file and its two uses to take it down.
+// A one-line plug for Bloatberg, used at the end of the wtf-ubuntu post; delete this file
+// and its use to take it down.
 interface Props {
-    where: 'post' | 'home';
+    where: 'post';
 }
-const { where } = Astro.props;
 ---
-{where === 'post' ? (
-    <aside class="plug">
-        <p>
-            <i>Added after this blew up:</i> Can't beat all the bullshit, so I parody it at <a href="https://bloatberg.com">Bloatberg</a>.
-        </p>
-    </aside>
-) : (
-    <p class="plug">
-        New: <a href="https://bloatberg.com">Bloatberg</a>, the most trusted name in
-        tech news. Source: Bloatberg.
+<aside class="plug">
+    <p>
+        <i>Added after this blew up:</i> Can't beat all the bullshit, so I parody it at <a href="https://bloatberg.com">Bloatberg</a>.
     </p>
-)}
+</aside>
 <style is:inline>
     aside.plug {
         margin-top: 2.5em;
