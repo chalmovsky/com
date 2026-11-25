@@ -41,8 +41,18 @@ import PostList from "../components/PostList.astro";
         }
 
         /* ---- the cabin: a still picture until clicked -------------------------- */
+        /* One timeline drives everything after the click (see script): it sets
+           --win, --halo and --halo-s on the cabin, paints the flood, and at the
+           moment the page is fully consumed swaps day for night underneath it.
+           Clicking again runs the same timeline backwards. */
         :root {
             --glow: #3cff6e;
+        }
+        /* the column of text; at night the sky behind it is dimmed so it stays readable */
+        .page {
+            position: relative;
+            z-index: 0;
+            border-radius: 3em;
         }
         .cabin:focus {
             outline: none;
@@ -75,28 +85,21 @@ import PostList from "../components/PostList.astro";
             box-shadow:
                 0 0 0 1px #fff2 inset,
                 0 1.5em 3em -1em #000a;
-            transition:
-                box-shadow 1.5s,
-                transform 1.2s cubic-bezier(0.45, 0, 0.2, 1);
+            transition: transform 1.2s cubic-bezier(0.45, 0, 0.2, 1);
         }
         .cabin img {
             display: block;
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition:
-                opacity 2.8s ease-in,
-                filter 2.8s ease-in,
-                transform 2.8s ease-in;
         }
-        /* soft green blooms over the five windows; still until the wake-up */
+        /* soft green blooms over the five windows */
         .cabin .windows {
             position: absolute;
             inset: 0;
             mix-blend-mode: screen;
             pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.4s;
+            opacity: var(--win, 0);
             background:
                 radial-gradient(
                     10% 9% at 30.2% 61.4%,
@@ -124,17 +127,15 @@ import PostList from "../components/PostList.astro";
                     transparent 70%
                 );
         }
-        /* glow that bleeds onto the page; hidden by day */
+        /* glow that bleeds from the cabin onto the page */
         .cabin::before {
             content: "";
             position: absolute;
             inset: -45%;
             z-index: -1;
             pointer-events: none;
-            opacity: 0;
-            transition:
-                opacity 3s,
-                transform 3s;
+            opacity: var(--halo, 0);
+            transform: scale(var(--halo-s, 1));
             background: radial-gradient(
                 closest-side,
                 color-mix(in srgb, var(--glow) 65%, transparent),
@@ -142,34 +143,30 @@ import PostList from "../components/PostList.astro";
             );
             filter: blur(24px);
         }
+        /* the light that grows out of the windows until it has the whole page */
+        .flood {
+            position: fixed;
+            inset: 0;
+            z-index: 10;
+            pointer-events: none;
+            display: none;
+        }
+        /* its beams */
+        .flood i {
+            position: absolute;
+            inset: 0;
+        }
 
-        /* 0. level: the cabin rotates straight before anything else happens,
-           and stays straight until the way back is over (the .level class, see script) */
+        /* 0. level: the cabin rotates straight before anything else happens */
         html.level .cabin .frame {
             transform: none;
-            transition:
-                box-shadow 1.5s,
-                transform 0.9s cubic-bezier(0.45, 0, 0.2, 1);
+            transition: transform 0.9s cubic-bezier(0.45, 0, 0.2, 1);
         }
-        /* 1. wake: the windows start to flash */
-        html.wake .cabin .windows {
-            animation: swell 2.6s ease-in-out infinite;
-        }
-        @keyframes swell {
-            0%,
-            100% {
-                opacity: 0;
-            }
-            50% {
-                opacity: 1;
-            }
-        }
-        /* 2. titles pop neon, one by one (the .lit class is added in sequence) */
+        /* 1. titles pop neon as the light reaches them (the .lit class) */
         h1,
         h2 {
             transform-origin: left center;
         }
-        /* on the way back the glow fades title by title, bottom up */
         h1,
         h2,
         .titles a,
@@ -219,109 +216,64 @@ import PostList from "../components/PostList.astro";
                     0 0 2em var(--glow);
             }
         }
-        /* 3. snow (canvas, see script) */
+        /* 2. night, back to front: the sky and its stars, the aurora, the far snow,
+           then the page, then the few flakes that pass in front of it.
+           The sky is painted once; only the aurora and the snow move. */
+        #night,
+        #aurora,
+        #far,
         #snow {
             position: fixed;
             inset: 0;
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 5;
-            opacity: 0;
-            transition: opacity 2.5s;
-        }
-        html.snowing #snow {
-            opacity: 1;
-        }
-        /* 4. dusk: the sky fades in behind the page, the cabin dissolves into it */
-        .sky {
-            position: fixed;
-            inset: 0;
+            display: none;
             z-index: -2;
-            opacity: 0;
-            transition: opacity 3.5s ease-in-out;
-            pointer-events: none;
-            background: radial-gradient(
-                120% 90% at 50% -10%,
-                #0f3a2a 0%,
-                #071b16 45%,
-                #03080a 100%
-            );
         }
-        html.dusk .sky {
-            opacity: 1;
+        /* painted small and stretched over the upper sky, which is what softens it */
+        #aurora {
+            height: 80%;
+            opacity: 0.42;
         }
-        html.dusk body {
-            color: #b9ffcf;
-            transition: color 3.5s;
+        #snow {
+            z-index: 5;
         }
-        html.dusk a:not(.lit) {
+        html.night #night,
+        html.night #aurora,
+        html.night #far,
+        html.night #snow {
+            display: block;
+        }
+        html.night {
+            color-scheme: dark;
+            background: #03090d;
+        }
+        html.night body {
+            color: #c9f7d8;
+        }
+        html.night a:not(.lit) {
             color: #8dffb0;
-            transition:
-                color 3.5s,
-                text-shadow 0.8s;
         }
-        html.dusk footer {
+        html.night footer {
             color: #7fcf97;
-            transition: color 3.5s;
         }
-        html.dusk .cabin img {
+        /* behind the text the night is dimmed a little, feathered out so there is no edge to see */
+        html.night .page {
+            background: rgba(3, 12, 13, 0.4);
+            box-shadow: 0 0 3em 3em rgba(3, 12, 13, 0.4);
+        }
+        /* the cabin itself has dissolved into its own light */
+        html.night .cabin img {
             opacity: 0;
             filter: blur(9px) saturate(1.6);
             transform: scale(1.12);
         }
-        html.dusk .cabin .frame {
+        html.night .cabin .frame {
             box-shadow: none;
         }
-        html.dusk .cabin::before {
-            opacity: 0.75;
-            transform: scale(1.5);
-        }
-        html.dusk .cabin .windows {
-            animation: die 4s ease-in-out forwards;
-        }
-        @keyframes die {
-            0% {
-                opacity: 0.2;
-            }
-            20% {
-                opacity: 0.9;
-            }
-            45% {
-                opacity: 0.15;
-            }
-            65% {
-                opacity: 0.6;
-            }
-            85% {
-                opacity: 0.05;
-            }
-            100% {
-                opacity: 0;
-            }
-        }
-        html.night .cabin .windows {
-            opacity: 0;
-            animation: none;
-        }
-        /* steady state and the way back */
-        html.night {
-            color-scheme: dark;
-        }
-        html.night .lit {
-            animation: none;
-        }
-        html.unwind * {
-            transition-duration: 2s !important;
-        }
-        html.unwind .cabin .windows {
-            animation: none;
-            opacity: 0;
-        }
         @media (prefers-reduced-motion: reduce) {
-            .cabin .windows,
-            .lit,
-            #snow {
+            .lit {
                 animation: none !important;
             }
             html * {
@@ -349,6 +301,12 @@ import PostList from "../components/PostList.astro";
             .cabin .frame {
                 transform: rotate(1.5deg);
             }
+            .page {
+                border-radius: 0;
+            }
+            html.night .page {
+                box-shadow: 0 0 2em 1em rgba(3, 12, 13, 0.4);
+            }
             html.level .cabin .frame {
                 transform: none;
             }
@@ -358,9 +316,13 @@ import PostList from "../components/PostList.astro";
         }
     </style>
 
-    <div class="sky"></div>
+    <canvas id="night" aria-hidden="true"></canvas>
+    <canvas id="aurora" width="200" height="110" aria-hidden="true"></canvas>
+    <canvas id="far" aria-hidden="true"></canvas>
     <canvas id="snow" aria-hidden="true"></canvas>
+    <div class="flood" aria-hidden="true"><i></i></div>
 
+    <div class="page">
     <main>
         <button
             class="cabin"
@@ -501,6 +463,7 @@ import PostList from "../components/PostList.astro";
             Contact: <span id="mail"></span> · <a href="feed.xml">RSS</a>
         </p>
     </footer>
+    </div>
 
     <script is:inline>
         document.getElementById("mail").textContent = [
@@ -510,7 +473,10 @@ import PostList from "../components/PostList.astro";
 
         (() => {
             const root = document.documentElement,
-                cabin = document.querySelector(".cabin");
+                cabin = document.querySelector(".cabin"),
+                panes = cabin.querySelector(".windows"),
+                flood = document.querySelector(".flood"),
+                beams = flood.firstElementChild;
             const titles = [
                 ...document.querySelectorAll(
                     "h1, h2, .titles a, .projects h3 a",
@@ -519,146 +485,402 @@ import PostList from "../components/PostList.astro";
             const still = matchMedia(
                 "(prefers-reduced-motion: reduce)",
             ).matches;
-            let timers = [],
-                on = false,
-                run = 0;
-            const at = (ms, fn) => timers.push(setTimeout(fn, still ? 0 : ms));
+            const ease = (x) => x * x * (3 - 2 * x);
+            const unit = (x) => Math.min(Math.max(x, 0), 1);
+            const sheet = (w, h) =>
+                Object.assign(document.createElement("canvas"), {
+                    width: w,
+                    height: h,
+                });
 
-            // --- snow: a canvas full of flakes with size, depth, drift and sway ---
-            const canvas = document.getElementById("snow"),
-                ctx = canvas.getContext("2d");
-            let flakes = [],
-                raf = 0,
-                W = 0,
-                H = 0;
-            const size = () => {
-                W = canvas.width = innerWidth * devicePixelRatio;
-                H = canvas.height = innerHeight * devicePixelRatio;
-            };
-            const flake = (top) => {
-                const z = Math.random();
-                return {
-                    x: Math.random() * W,
-                    y: top ? -10 : Math.random() * H,
-                    z,
-                    r: (0.6 + z * 2.2) * devicePixelRatio,
-                    v: (0.35 + z * 1.1) * devicePixelRatio,
-                    ph: Math.random() * 6.28,
-                    a: 0.35 + z * 0.6,
-                };
-            };
-            const tick = () => {
-                ctx.clearRect(0, 0, W, H);
-                for (const f of flakes) {
-                    f.y += f.v;
-                    f.ph += 0.012 + f.z * 0.01;
-                    f.x +=
-                        Math.sin(f.ph) * (0.25 + f.z * 0.5) * devicePixelRatio -
-                        0.15 * devicePixelRatio;
-                    if (f.y > H + 10) Object.assign(f, flake(true));
-                    if (f.x < -10) f.x = W + 10;
-                    else if (f.x > W + 10) f.x = -10;
-                    ctx.globalAlpha = f.a;
-                    ctx.beginPath();
-                    ctx.arc(f.x, f.y, f.r, 0, 6.28);
-                    ctx.fillStyle = "#fff";
-                    ctx.fill();
-                }
-                raf = requestAnimationFrame(tick);
-            };
-            const startSnow = () => {
-                size();
-                flakes = Array.from(
-                    {
-                        length: Math.round(
-                            (W * H) /
-                                (devicePixelRatio * devicePixelRatio) /
-                                7000,
-                        ),
-                    },
-                    () => flake(false),
+            // --- the night: sky, aurora and snow, drawn while it is dark ---
+            const scene = (() => {
+                const [sky, aur, far, front] = ["night", "aurora", "far", "snow"].map(
+                    (id) => document.getElementById(id),
                 );
-                cancelAnimationFrame(raf);
-                if (!still) tick();
-                else (tick(), cancelAnimationFrame(raf));
-                root.classList.add("snowing");
-            };
-            const stopSnow = () => {
-                root.classList.remove("snowing");
-                setTimeout(() => {
-                    cancelAnimationFrame(raf);
-                    ctx.clearRect(0, 0, W, H);
-                }, 2200);
-            };
-            addEventListener("resize", () => {
-                if (on) size();
-            });
+                const b = far.getContext("2d"),
+                    f = front.getContext("2d");
+                let W = 0,
+                    H = 0,
+                    d = 1,
+                    flakes = [],
+                    twinkle = [],
+                    live = false;
 
-            // --- the sequence ---
-            const nightfall = () => {
-                root.classList.remove("unwind");
-                root.classList.add("level"); // the cabin straightens up
-                at(1000, () => root.classList.add("wake")); // windows start flashing
-                titles.forEach((el, i) =>
-                    at(3600 + i * 320, () => el.classList.add("lit")),
-                ); // boom, boom, boom
-                const afterTitles = 3600 + titles.length * 320 + 200;
-                at(afterTitles, startSnow); // snow
-                at(afterTitles + 900, () => root.classList.add("dusk")); // sky darkens, cabin dissolves
-                at(afterTitles + 900 + 3600, () => {
-                    root.classList.remove("wake");
-                    root.classList.add("night");
+                // the same forest and the same stars every time
+                const seeded = (a) => () => {
+                    a = (a + 0x6d2b79f5) | 0;
+                    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+                    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+                    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+                };
+
+                // a soft dot: every flake is one of these, scaled
+                const dot = (rgb) => {
+                    const s = sheet(32, 32),
+                        c = s.getContext("2d"),
+                        g = c.createRadialGradient(16, 16, 0, 16, 16, 16);
+                    g.addColorStop(0, `rgba(${rgb},1)`);
+                    g.addColorStop(0.35, `rgba(${rgb},0.75)`);
+                    g.addColorStop(1, `rgba(${rgb},0)`);
+                    c.fillStyle = g;
+                    c.fillRect(0, 0, 32, 32);
+                    return s;
+                };
+                const white = dot("255,255,255"),
+                    green = dot("150,255,185");
+
+                // the aurora is painted small, one column at a time, and stretched over the sky
+                const AW = aur.width,
+                    AH = aur.height,
+                    ac = aur.getContext("2d"),
+                    ray = sheet(1, 128);
+                {
+                    const c = ray.getContext("2d"),
+                        g = c.createLinearGradient(0, 0, 0, 128);
+                    g.addColorStop(0, "rgba(40,190,170,0)");
+                    g.addColorStop(0.45, "rgba(50,220,150,0.28)");
+                    g.addColorStop(0.78, "rgba(100,255,150,0.85)");
+                    g.addColorStop(0.88, "rgba(160,255,185,1)");
+                    g.addColorStop(1, "rgba(60,255,110,0)");
+                    c.fillStyle = g;
+                    c.fillRect(0, 0, 1, 128);
+                }
+                const curtains = [
+                    { y: 0.44, h: 0.5, a: 0.9, f1: 5.1, s1: 0.11, p1: 0, f2: 13, s2: 0.17, p2: 2, f3: 3.3, s3: 0.07, p3: 1 },
+                    { y: 0.3, h: 0.36, a: 0.55, f1: 3.7, s1: 0.08, p1: 2.4, f2: 9, s2: 0.13, p2: 0.7, f3: 4.6, s3: 0.05, p3: 3.9 },
+                    { y: 0.58, h: 0.4, a: 0.45, f1: 6.4, s1: 0.14, p1: 4.2, f2: 17, s2: 0.21, p2: 5.1, f3: 2.4, s3: 0.09, p3: 2.2 },
+                ];
+                const aurora = (t) => {
+                    ac.clearRect(0, 0, AW, AH);
+                    ac.globalCompositeOperation = "lighter";
+                    for (const k of curtains)
+                        for (let x = 0; x < AW; x++) {
+                            const u = x / AW;
+                            const hem =
+                                AH *
+                                (k.y +
+                                    0.09 * Math.sin(u * k.f1 + t * k.s1 + k.p1) +
+                                    0.04 * Math.sin(u * k.f2 - t * k.s2 + k.p2));
+                            let glow =
+                                0.5 + 0.5 * Math.sin(u * k.f3 + t * k.s3 + k.p3);
+                            // rays: broad, slow, never finer than the columns they are painted in
+                            glow *=
+                                glow *
+                                (0.84 +
+                                    0.16 *
+                                        Math.sin(u * 58 + t * 0.6 + k.p2) *
+                                        Math.sin(u * 23 - t * 0.3 + k.p1));
+                            const tall = AH * k.h * (0.55 + 0.45 * glow);
+                            ac.globalAlpha =
+                                k.a * glow * Math.sqrt(Math.sin(Math.PI * u));
+                            ac.drawImage(ray, 0, 0, 1, 128, x, hem - tall, 1, tall * 1.07);
+                        }
+                };
+
+                const paintSky = () => {
+                    const c = sky.getContext("2d"),
+                        rnd = seeded(7),
+                        g = c.createLinearGradient(0, 0, 0, H);
+                    g.addColorStop(0, "#03090d");
+                    g.addColorStop(0.45, "#071a20");
+                    g.addColorStop(0.8, "#0b2a2a");
+                    g.addColorStop(1, "#0e382c");
+                    c.globalAlpha = 1;
+                    c.fillStyle = g;
+                    c.fillRect(0, 0, W, H);
+                    twinkle = [];
+                    const count = Math.round((W * H) / (d * d) / 2600);
+                    for (let i = 0; i < count; i++) {
+                        const x = rnd() * W,
+                            y = rnd() * rnd() * H * 0.85,
+                            r = (0.4 + rnd() * rnd() * 1.3) * d;
+                        c.globalAlpha = 0.25 + rnd() * 0.6;
+                        c.fillStyle = rnd() < 0.15 ? "#c9ffe0" : "#e9f4ff";
+                        c.beginPath();
+                        c.arc(x, y, r, 0, 6.3);
+                        c.fill();
+                        if (i % 8 === 0)
+                            twinkle.push({ x, y, r: r * 1.25, ph: rnd() * 6.3, sp: 0.6 + rnd() * 1.8 });
+                    }
+                };
+
+                // snow: far flakes are small, slow and faint; near ones big, fast and soft
+                const flake = (top) => {
+                    const z = Math.pow(Math.random(), 2.1),
+                        close = z > 0.86;
+                    return {
+                        x: Math.random() * (W + 200 * d) - 100 * d,
+                        y: top ? -14 * d : Math.random() * H,
+                        z,
+                        close,
+                        r: (0.6 + 2.4 * z * z) * (close ? 1.25 : 1) * d * (0.8 + Math.random() * 0.4),
+                        v: (22 + 95 * z) * d * (0.85 + Math.random() * 0.3),
+                        ph: Math.random() * 6.3,
+                        w: 0.6 + Math.random() * 1.4,
+                        sw: (6 + 18 * z) * d,
+                        tw: Math.random() * 6.3,
+                    };
+                };
+                const snow = (t, dt) => {
+                    // the wind comes and goes in long gusts
+                    const wind =
+                        (10 +
+                            30 *
+                                (0.5 + 0.5 * Math.sin(t * 0.21)) *
+                                (0.6 + 0.4 * Math.sin(t * 0.053 + 2))) *
+                        d;
+                    // flakes passing the cabin's light turn green
+                    const c = cabin.getBoundingClientRect(),
+                        gx = (c.left + c.width * 0.5) * d,
+                        gy = (c.top + c.height * 0.55) * d,
+                        gr = c.width * 1.5 * d;
+                    f.clearRect(0, 0, W, H);
+                    for (const k of flakes) {
+                        k.ph += k.w * dt;
+                        k.y += k.v * dt;
+                        k.x += (wind * (0.35 + k.z) + Math.cos(k.ph) * k.sw) * dt;
+                        if (k.y > H + 14 * d) Object.assign(k, flake(true));
+                        if (k.x > W + 100 * d) k.x -= W + 200 * d;
+                        else if (k.x < -100 * d) k.x += W + 200 * d;
+                        const lit = Math.exp(
+                            -((k.x - gx) ** 2 + (k.y - gy) ** 2) / (gr * gr),
+                        );
+                        const a =
+                            (k.close ? 0.5 : 0.35 + 0.6 * k.z) *
+                            (0.82 + 0.18 * Math.sin(k.tw + t * 3));
+                        // the faster a flake falls, the more it smears along its fall
+                        const ctx = k.close ? f : b,
+                            wide = k.r * (k.close ? 2.3 : 1.9),
+                            tall = wide * (1 + 0.9 * k.z);
+                        ctx.globalAlpha = a * (1 - lit * 0.85);
+                        ctx.drawImage(white, k.x - wide, k.y - tall, wide * 2, tall * 2);
+                        if (lit > 0.02) {
+                            ctx.globalAlpha = a * lit;
+                            ctx.drawImage(green, k.x - wide, k.y - tall, wide * 2, tall * 2);
+                        }
+                    }
+                    f.globalAlpha = b.globalAlpha = 1;
+                };
+
+                const resize = () => {
+                    if (!live) return;
+                    d = Math.min(devicePixelRatio || 1, 2);
+                    W = sky.width = far.width = front.width = Math.round(innerWidth * d);
+                    H = sky.height = far.height = front.height = Math.round(innerHeight * d);
+                    paintSky();
+                    const want = Math.min(520, Math.round((innerWidth * innerHeight) / 3200));
+                    flakes = Array.from({ length: want }, () => flake(false));
+                };
+                const draw = (now, dt) => {
+                    if (!live) return;
+                    const t = now / 1000;
+                    aurora(t);
+                    b.clearRect(0, 0, W, H);
+                    b.fillStyle = "#eaf6ff";
+                    for (const s of twinkle) {
+                        b.globalAlpha = 0.35 + 0.35 * Math.sin(t * s.sp + s.ph);
+                        b.beginPath();
+                        b.arc(s.x, s.y, s.r, 0, 6.3);
+                        b.fill();
+                    }
+                    snow(t, dt / 1000);
+                };
+                return {
+                    start() {
+                        live = true;
+                        resize();
+                    },
+                    stop() {
+                        live = false;
+                        flakes = [];
+                    },
+                    resize,
+                    draw,
+                };
+            })();
+
+            // --- the timeline: one number, p, in milliseconds from day to night ---
+            // level the cabin, then the windows light and the light keeps coming
+            // out of them: small at first, then further and faster, without a
+            // break, until it has the whole page; under it day is swapped for
+            // night, and it clears.
+            const LEVEL = 800,
+                SWAP = LEVEL + 10500,
+                TOTAL = SWAP + 2600,
+                BACK = 1.5; // the way back is the same film, run a little faster
+            let p = 0,
+                goal = 0,
+                on = false,
+                dark = false,
+                raf = 0,
+                then = 0;
+            // how far each title is from the cabin: it catches when the light gets there
+            let away = titles.map(() => Infinity);
+            const measure = () => {
+                const c = cabin.getBoundingClientRect(),
+                    cx = c.left + c.width / 2,
+                    cy = c.top + c.height / 2;
+                const words = document.createRange();
+                away = titles.map((el) => {
+                    // the words themselves: a heading's own box runs on under the cabin
+                    words.selectNodeContents(el);
+                    const r = words.getBoundingClientRect(),
+                        nx = Math.min(Math.max(cx, r.left), r.right),
+                        ny = Math.min(Math.max(cy, r.top), r.bottom);
+                    return Math.hypot(nx - cx, ny - cy);
                 });
             };
-            const daybreak = () => {
-                root.classList.remove("wake");
-                const lit = titles
-                    .filter((el) => el.classList.contains("lit"))
-                    .reverse();
-                lit.forEach((el, i) =>
-                    at(i * 260, () => el.classList.remove("lit")),
-                ); // glow goes out, bottom up
-                at(lit.length ? (lit.length - 1) * 260 + 700 : 0, () => {
-                    root.classList.add("unwind"); // then the day comes back
-                    root.classList.remove("dusk", "night");
-                    stopSnow();
-                    // the tilt comes last: wait until every fade on the page has really finished
-                    const me = run,
-                        tiltBack = () => {
-                            if (me !== run) return;
-                            root.classList.remove("unwind");
-                            at(250, () => root.classList.remove("level"));
-                        };
-                    if (!document.getAnimations) return at(2300, tiltBack);
-                    requestAnimationFrame(() =>
-                        requestAnimationFrame(() =>
-                            Promise.all(
-                                document
-                                    .getAnimations()
-                                    .filter(
-                                        (a) =>
-                                            a.effect &&
-                                            a.effect.getComputedTiming()
-                                                .endTime !== Infinity,
-                                    )
-                                    .map((a) => a.finished.catch(() => {})),
-                            ).then(tiltBack),
-                        ),
+
+            // where the five windows sit in the picture, as fractions of it
+            const PANES = [
+                [0.302, 0.614],
+                [0.444, 0.613],
+                [0.602, 0.613],
+                [0.704, 0.613],
+                [0.652, 0.46],
+            ];
+            const CORE = 0.34; // how much of each pool of light is solid
+            // Light does not end at an edge: past its solid middle each pool
+            // thins out the way a glow does, quickly at first and then for a
+            // long way, and it goes from white at the window to green.
+            const FALL = [
+                [0, 244, 255, 247, 1],
+                [CORE * 0.45, 196, 255, 214, 1],
+                [CORE, 112, 255, 152, 1],
+                [0.42, 96, 255, 140, 0.86],
+                [0.5, 84, 255, 132, 0.64],
+                [0.6, 72, 250, 124, 0.4],
+                [0.7, 62, 244, 118, 0.22],
+                [0.8, 54, 238, 112, 0.1],
+                [0.9, 48, 232, 108, 0.03],
+                [1, 44, 228, 104, 0],
+            ];
+            // and it comes out in beams: two fans of soft spokes that turn
+            // slowly against each other
+            const fan = (n, seed) => {
+                let k = seed;
+                const rnd = () => (k = (k * 16807) % 2147483647) / 2147483647,
+                    step = 360 / n,
+                    out = [];
+                for (let i = 0; i < n; i++) {
+                    const mid = (i + 0.2 + 0.6 * rnd()) * step,
+                        half = step * (0.08 + 0.12 * rnd()),
+                        al = (0.12 + 0.3 * rnd()).toFixed(2);
+                    out.push(
+                        `rgba(226,255,235,0) ${(mid - half).toFixed(1)}deg`,
+                        `rgba(226,255,235,${al}) ${mid.toFixed(1)}deg`,
+                        `rgba(226,255,235,0) ${(mid + half).toFixed(1)}deg`,
                     );
-                });
+                }
+                return out.join(", ");
+            };
+            const FANS = [fan(13, 11), fan(9, 5)];
+
+            const apply = () => {
+                const grown = unit((p - LEVEL) / (SWAP - LEVEL)), // the swell, 0 to 1
+                    night = p >= SWAP;
+                if (night !== dark) {
+                    dark = night;
+                    root.classList.toggle("night", night);
+                    night ? scene.start() : scene.stop();
+                }
+                root.classList.toggle("level", p > 0);
+
+                // the windows come on, with the glow round the cabin behind them
+                cabin.style.setProperty("--win", night ? 0 : ease(unit(grown / 0.1)));
+                cabin.style.setProperty("--halo", night ? 0.72 : 0.9 * ease(unit(grown / 0.4)));
+                // on a phone the cabin is as wide as the page, so its night glow stays closer in
+                cabin.style.setProperty(
+                    "--halo-s",
+                    night ? (innerWidth < 576 ? 1.05 : 1.5) : 1 + 1.1 * grown,
+                );
+
+                // the flood: one pool of light on each window. They never stop
+                // growing; they run together, spread out of the cabin and cross
+                // the page at a pace that lets each title catch just ahead of the
+                // front of the light, well before the solid middle arrives.
+                const w = panes.getBoundingClientRect(),
+                    cx = w.left + w.width / 2,
+                    cy = w.top + w.height * 0.6,
+                    far =
+                        Math.hypot(Math.max(cx, innerWidth - cx), Math.max(cy, innerHeight - cy)) +
+                        w.width * 0.3,
+                    small = w.width * 0.035,
+                    reach = small + (far / CORE - small) * Math.pow(grown, 3);
+                titles.forEach((el, i) =>
+                    el.classList.toggle("lit", grown > 0 && reach * 1.15 >= away[i]),
+                );
+                const veil = night ? 1 - ease(unit((p - SWAP) / (TOTAL - SWAP))) : 1;
+                const a = ease(unit(grown / 0.08));
+                if (a * veil < 0.004) {
+                    flood.style.display = "none";
+                    return;
+                }
+                flood.style.display = "block";
+                flood.style.opacity = veil;
+                const r = reach.toFixed(1),
+                    stops = FALL.map(
+                        ([at, red, green, blue, al]) =>
+                            `rgba(${red},${green},${blue},${(al * a).toFixed(3)}) ${(at * 100).toFixed(1)}%`,
+                    ).join(", ");
+                flood.style.background = PANES.map(
+                    ([x, y]) =>
+                        `radial-gradient(circle ${r}px at ${(w.left + w.width * x).toFixed(1)}px ` +
+                        `${(w.top + w.height * y).toFixed(1)}px, ${stops})`,
+                ).join(", ");
+
+                // the beams reach a little past the pools, and fade as the page fills
+                const at = `at ${cx.toFixed(1)}px ${cy.toFixed(1)}px`,
+                    turn = p * 0.004;
+                beams.style.opacity = (a * (1 - 0.75 * ease(unit((grown - 0.55) / 0.45)))).toFixed(3);
+                beams.style.background =
+                    `conic-gradient(from ${turn.toFixed(2)}deg ${at}, ${FANS[0]}), ` +
+                    `conic-gradient(from ${(140 - turn * 0.7).toFixed(2)}deg ${at}, ${FANS[1]})`;
+                beams.style.maskImage = beams.style.webkitMaskImage =
+                    `radial-gradient(circle ${(reach * 1.25 + w.width * 0.2).toFixed(1)}px ${at}, ` +
+                    `transparent 0, #000 14%, rgba(0,0,0,0.6) 50%, transparent 100%)`;
             };
 
+            const frame = (now) => {
+                raf = 0;
+                const dt = Math.min(now - then, 50);
+                then = now;
+                if (p !== goal) {
+                    p = goal > p ? Math.min(goal, p + dt) : Math.max(goal, p - dt * BACK);
+                    apply();
+                }
+                if (dark) scene.draw(now, dt);
+                if (p !== goal || dark) wake();
+            };
+            const wake = () => {
+                if (raf) return;
+                raf = requestAnimationFrame((now) => {
+                    if (!then || now - then > 200) then = now - 16;
+                    frame(now);
+                });
+            };
+            // with motion turned down there is no film: day, or night with the snow held still
+            const jump = () => {
+                p = goal;
+                apply();
+                scene.draw(performance.now(), 0);
+            };
+
+            addEventListener("resize", () => {
+                scene.resize();
+                if (still) scene.draw(performance.now(), 0);
+            });
             addEventListener("keydown", (e) => {
                 if (e.key === "Escape" && on) cabin.click();
             });
             cabin.addEventListener("click", () => {
                 cabin.blur();
-                timers.forEach(clearTimeout);
-                timers = [];
-                run++;
+                if (p === 0) measure();
                 on = !on;
+                goal = on ? TOTAL : 0;
                 cabin.setAttribute("aria-pressed", String(on));
-                on ? nightfall() : daybreak();
+                still ? jump() : wake();
             });
         })();
     </script>
