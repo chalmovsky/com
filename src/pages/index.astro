@@ -42,7 +42,7 @@ import PostList from "../components/PostList.astro";
 
         /* ---- the cabin: a still picture until clicked -------------------------- */
         /* One timeline drives everything after the click (see script): it sets
-           --win, --halo and --halo-s on the cabin, paints the flood, and at the
+           --win, --halo and --halo-s on the cabin, draws the flood, and at the
            moment the page is fully consumed swaps day for night underneath it.
            Clicking again runs the same timeline backwards. */
         :root {
@@ -131,30 +131,34 @@ import PostList from "../components/PostList.astro";
         .cabin::before {
             content: "";
             position: absolute;
-            inset: -45%;
+            inset: -55%;
             z-index: -1;
             pointer-events: none;
             opacity: var(--halo, 0);
             transform: scale(var(--halo-s, 1));
+            will-change: transform, opacity;
+            /* soft by its own falloff: a blur here is repainted every frame */
             background: radial-gradient(
                 closest-side,
-                color-mix(in srgb, var(--glow) 65%, transparent),
-                transparent 70%
+                color-mix(in srgb, var(--glow) 62%, transparent),
+                color-mix(in srgb, var(--glow) 44%, transparent) 26%,
+                color-mix(in srgb, var(--glow) 20%, transparent) 50%,
+                color-mix(in srgb, var(--glow) 6%, transparent) 70%,
+                transparent 88%
             );
-            filter: blur(24px);
         }
-        /* the light that grows out of the windows until it has the whole page */
+        /* the light that grows out of the windows until it has the whole page:
+           a small canvas, stretched over the page by its transform, so that
+           growing it costs the phone nothing to repaint */
         .flood {
             position: fixed;
-            inset: 0;
+            left: 0;
+            top: 0;
             z-index: 10;
             pointer-events: none;
             display: none;
-        }
-        /* its beams */
-        .flood i {
-            position: absolute;
-            inset: 0;
+            transform-origin: 0 0;
+            will-change: transform, opacity;
         }
 
         /* 0. level: the cabin rotates straight before anything else happens */
@@ -266,8 +270,6 @@ import PostList from "../components/PostList.astro";
         /* the cabin itself has dissolved into its own light */
         html.night .cabin img {
             opacity: 0;
-            filter: blur(9px) saturate(1.6);
-            transform: scale(1.12);
         }
         html.night .cabin .frame {
             box-shadow: none;
@@ -320,7 +322,7 @@ import PostList from "../components/PostList.astro";
     <canvas id="aurora" width="200" height="110" aria-hidden="true"></canvas>
     <canvas id="far" aria-hidden="true"></canvas>
     <canvas id="snow" aria-hidden="true"></canvas>
-    <div class="flood" aria-hidden="true"><i></i></div>
+    <canvas class="flood" width="384" height="384" aria-hidden="true"></canvas>
 
     <div class="page">
     <main>
@@ -475,8 +477,7 @@ import PostList from "../components/PostList.astro";
             const root = document.documentElement,
                 cabin = document.querySelector(".cabin"),
                 panes = cabin.querySelector(".windows"),
-                flood = document.querySelector(".flood"),
-                beams = flood.firstElementChild;
+                flood = document.querySelector(".flood");
             const titles = [
                 ...document.querySelectorAll(
                     "h1, h2, .titles a, .projects h3 a",
@@ -756,30 +757,24 @@ import PostList from "../components/PostList.astro";
                 [0.9, 48, 232, 108, 0.03],
                 [1, 44, 228, 104, 0],
             ];
-            // and it comes out in beams: two fans of soft spokes that turn
-            // slowly against each other
-            const fan = (n, seed) => {
-                let k = seed;
-                const rnd = () => (k = (k * 16807) % 2147483647) / 2147483647,
-                    step = 360 / n,
-                    out = [];
-                for (let i = 0; i < n; i++) {
-                    const mid = (i + 0.2 + 0.6 * rnd()) * step,
-                        half = step * (0.08 + 0.12 * rnd()),
-                        al = (0.12 + 0.3 * rnd()).toFixed(2);
-                    out.push(
-                        `rgba(226,255,235,0) ${(mid - half).toFixed(1)}deg`,
-                        `rgba(226,255,235,${al}) ${mid.toFixed(1)}deg`,
-                        `rgba(226,255,235,0) ${(mid + half).toFixed(1)}deg`,
-                    );
-                }
-                return out.join(", ");
-            };
-            const FANS = [fan(13, 11), fan(9, 5)];
+            // One pool, painted once; the flood is five of these, drawn small
+            // and stretched.
+            const pool = sheet(256, 256);
+            {
+                const c = pool.getContext("2d"),
+                    g = c.createRadialGradient(128, 128, 0, 128, 128, 128);
+                for (const [at, red, green, blue, al] of FALL)
+                    g.addColorStop(at, `rgba(${red},${green},${blue},${al})`);
+                c.fillStyle = g;
+                c.fillRect(0, 0, 256, 256);
+            }
+            const FN = flood.width,
+                fc = flood.getContext("2d");
 
             const apply = () => {
                 const grown = unit((p - LEVEL) / (SWAP - LEVEL)), // the swell, 0 to 1
-                    night = p >= SWAP;
+                    night = p >= SWAP,
+                    w = panes.getBoundingClientRect();
                 if (night !== dark) {
                     dark = night;
                     root.classList.toggle("night", night);
@@ -800,8 +795,7 @@ import PostList from "../components/PostList.astro";
                 // growing; they run together, spread out of the cabin and cross
                 // the page at a pace that lets each title catch just ahead of the
                 // front of the light, well before the solid middle arrives.
-                const w = panes.getBoundingClientRect(),
-                    cx = w.left + w.width / 2,
+                const cx = w.left + w.width / 2,
                     cy = w.top + w.height * 0.6,
                     far =
                         Math.hypot(Math.max(cx, innerWidth - cx), Math.max(cy, innerHeight - cy)) +
@@ -812,34 +806,29 @@ import PostList from "../components/PostList.astro";
                     el.classList.toggle("lit", grown > 0 && reach * 1.15 >= away[i]),
                 );
                 const veil = night ? 1 - ease(unit((p - SWAP) / (TOTAL - SWAP))) : 1;
-                const a = ease(unit(grown / 0.08));
-                if (a * veil < 0.004) {
+                const a = ease(unit(grown / 0.08)) * veil;
+                if (a < 0.004) {
                     flood.style.display = "none";
                     return;
                 }
+                // the canvas always holds just the square the pools fill, however
+                // large that square is on the page
+                const half = reach + w.width * 0.25,
+                    k = FN / (2 * half),
+                    r = reach * k;
+                fc.clearRect(0, 0, FN, FN);
+                for (const [x, y] of PANES)
+                    fc.drawImage(
+                        pool,
+                        FN / 2 + (w.left + w.width * x - cx) * k - r,
+                        FN / 2 + (w.top + w.height * y - cy) * k - r,
+                        2 * r,
+                        2 * r,
+                    );
                 flood.style.display = "block";
-                flood.style.opacity = veil;
-                const r = reach.toFixed(1),
-                    stops = FALL.map(
-                        ([at, red, green, blue, al]) =>
-                            `rgba(${red},${green},${blue},${(al * a).toFixed(3)}) ${(at * 100).toFixed(1)}%`,
-                    ).join(", ");
-                flood.style.background = PANES.map(
-                    ([x, y]) =>
-                        `radial-gradient(circle ${r}px at ${(w.left + w.width * x).toFixed(1)}px ` +
-                        `${(w.top + w.height * y).toFixed(1)}px, ${stops})`,
-                ).join(", ");
-
-                // the beams reach a little past the pools, and fade as the page fills
-                const at = `at ${cx.toFixed(1)}px ${cy.toFixed(1)}px`,
-                    turn = p * 0.004;
-                beams.style.opacity = (a * (1 - 0.75 * ease(unit((grown - 0.55) / 0.45)))).toFixed(3);
-                beams.style.background =
-                    `conic-gradient(from ${turn.toFixed(2)}deg ${at}, ${FANS[0]}), ` +
-                    `conic-gradient(from ${(140 - turn * 0.7).toFixed(2)}deg ${at}, ${FANS[1]})`;
-                beams.style.maskImage = beams.style.webkitMaskImage =
-                    `radial-gradient(circle ${(reach * 1.25 + w.width * 0.2).toFixed(1)}px ${at}, ` +
-                    `transparent 0, #000 14%, rgba(0,0,0,0.6) 50%, transparent 100%)`;
+                flood.style.opacity = a.toFixed(3);
+                flood.style.transform =
+                    `translate(${(cx - half).toFixed(1)}px, ${(cy - half).toFixed(1)}px) scale(${(1 / k).toFixed(4)})`;
             };
 
             const frame = (now) => {
