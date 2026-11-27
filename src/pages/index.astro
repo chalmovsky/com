@@ -303,6 +303,14 @@ import PostList from "../components/PostList.astro";
             .cabin .frame {
                 transform: rotate(1.5deg);
             }
+            /* the picture is square and the frame here is not, so it is cropped
+               top and bottom: the windows overlay has to be the picture's size,
+               not the frame's, or the light misses the windows */
+            .cabin .windows {
+                inset: 50% 0 auto;
+                aspect-ratio: 1;
+                transform: translateY(-50%);
+            }
             .page {
                 border-radius: 0;
             }
