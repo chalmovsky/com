@@ -831,18 +831,19 @@ import PostList from "../components/PostList.astro";
                 });
             };
 
-            // where the five windows sit in the picture, as fractions of it
+            // the five windows in the picture, as fractions of it: the middle
+            // of each, then half its width and half its height
             const PANES = [
-                [0.302, 0.614],
-                [0.444, 0.613],
-                [0.602, 0.613],
-                [0.704, 0.613],
-                [0.652, 0.46],
+                [0.304, 0.609, 0.013, 0.029],
+                [0.444, 0.61, 0.025, 0.036],
+                [0.603, 0.609, 0.018, 0.034],
+                [0.707, 0.61, 0.016, 0.033],
+                [0.6525, 0.4625, 0.02, 0.03],
             ];
-            const CORE = 0.34; // how much of each pool of light is solid
-            // Light does not end at an edge: past its solid middle each pool
-            // thins out the way a glow does, quickly at first and then for a
-            // long way, and it goes from white at the window to green.
+            const CORE = 0.34; // how much of the light's reach is solid
+            // Light does not end at an edge: past its solid middle it thins
+            // out the way a glow does, quickly at first and then for a long
+            // way, and it goes from white at the window to green.
             const FALL = [
                 [0, 236, 255, 242, 1],
                 [CORE * 0.2, 176, 255, 200, 1],
@@ -856,21 +857,63 @@ import PostList from "../components/PostList.astro";
                 [0.9, 48, 232, 108, 0.03],
                 [1, 44, 228, 104, 0],
             ];
-            // One pool, painted once; the flood is five of these, drawn small
-            // and stretched.
-            const pool = sheet(256, 256);
-            {
-                const c = pool.getContext("2d"),
-                    g = c.createRadialGradient(128, 128, 0, 128, 128, 128);
-                for (const [at, red, green, blue, al] of FALL)
-                    g.addColorStop(at, `rgba(${red},${green},${blue},${al})`);
-                c.fillStyle = g;
-                c.fillRect(0, 0, 256, 256);
-            }
             if (coarse) flood.width = flood.height = 256;
             const FN = flood.width,
                 fc = flood.getContext("2d");
             let drawn = "";
+            // The light leaves a window, not a point. Every dot of the flood
+            // is as bright as it is near to the nearest window's edge, so the
+            // light starts out the shape of the windows, rounds off as it gets
+            // away, and the five pools run together without a join. It is
+            // worked out dot by dot on a small canvas, then stretched.
+            // SHADE is FALL as a table: the colour at each distance.
+            const STEPS = 1024,
+                SHADE = new Uint32Array(STEPS);
+            for (let i = 0, at = 1; i < STEPS; i++) {
+                const d = i / (STEPS - 1);
+                while (at < FALL.length - 1 && FALL[at][0] < d) at++;
+                const lo = FALL[at - 1],
+                    hi = FALL[at],
+                    f = unit((d - lo[0]) / (hi[0] - lo[0])),
+                    mix = (n) => Math.round(lo[n] + (hi[n] - lo[n]) * f);
+                SHADE[i] =
+                    ((Math.round((lo[4] + (hi[4] - lo[4]) * f) * 255) << 24) |
+                        (mix(3) << 16) |
+                        (mix(2) << 8) |
+                        mix(1)) >>>
+                    0;
+            }
+            const film = fc.createImageData(FN, FN),
+                dots = new Uint32Array(film.data.buffer),
+                edges = new Float32Array(PANES.length * 4),
+                rise = new Float32Array(PANES.length);
+            // edges: each window as left, top, right, bottom in canvas dots.
+            // r: how far the light reaches. glare: how much of the window
+            // itself has gone white; until then it stays a window, bars and all.
+            const shine = (r, glare) => {
+                const per = (STEPS - 1) / r,
+                    r2 = r * r,
+                    glass = ((SHADE[0] & 0xffffff) | (Math.round(glare * 255) << 24)) >>> 0,
+                    n = PANES.length;
+                for (let y = 0, o = 0; y < FN; y++) {
+                    const py = y + 0.5;
+                    for (let j = 0; j < n; j++) {
+                        const dy = Math.max(edges[j * 4 + 1] - py, 0, py - edges[j * 4 + 3]);
+                        rise[j] = dy * dy;
+                    }
+                    for (let x = 0; x < FN; x++, o++) {
+                        const px = x + 0.5;
+                        let near = r2;
+                        for (let j = 0; j < n; j++) {
+                            const dx = Math.max(edges[j * 4] - px, 0, px - edges[j * 4 + 2]),
+                                d = dx * dx + rise[j];
+                            if (d < near) near = d;
+                        }
+                        dots[o] = near === 0 ? glass : near < r2 ? SHADE[(Math.sqrt(near) * per) | 0] : 0;
+                    }
+                }
+                fc.putImageData(film, 0, 0);
+            };
 
             const apply = () => {
                 const ms = p - LEVEL, // how long the light has been on
@@ -896,7 +939,7 @@ import PostList from "../components/PostList.astro";
                     far =
                         Math.hypot(Math.max(cx, innerWidth - cx), Math.max(cy, innerHeight - cy)) +
                         w.width * 0.3,
-                    small = w.width * 0.035,
+                    small = w.width * 0.008,
                     // the swell carries the rim of the light to the far corner;
                     // the burst carries the solid middle there, picking up at
                     // the speed the swell left off
@@ -912,7 +955,7 @@ import PostList from "../components/PostList.astro";
                 );
                 // it clears quickly at first: night shows at once
                 const veil = night ? Math.pow(1 - unit((p - SWAP) / (TOTAL - SWAP)), 2) : 1;
-                const a = ease(unit(ms / 380)) * veil;
+                const a = ease(unit(ms / 600)) * veil;
                 if (a < 0.004) {
                     box.style.display = "none";
                     return;
@@ -925,15 +968,14 @@ import PostList from "../components/PostList.astro";
                     key = `${reach.toFixed(1)} ${w.width.toFixed(1)}`;
                 if (key !== drawn) {
                     drawn = key;
-                    fc.clearRect(0, 0, FN, FN);
-                    for (const [x, y] of PANES)
-                        fc.drawImage(
-                            pool,
-                            FN / 2 + (w.left + w.width * x - cx) * k - r,
-                            FN / 2 + (w.top + w.height * y - cy) * k - r,
-                            2 * r,
-                            2 * r,
-                        );
+                    const glare = ease(unit((reach - w.width * 0.03) / (w.width * 0.1)));
+                    PANES.forEach(([x, y, hw, hh], j) => {
+                        edges[j * 4] = FN / 2 + (w.left + w.width * (x - hw) - cx) * k;
+                        edges[j * 4 + 1] = FN / 2 + (w.top + w.height * (y - hh) - cy) * k;
+                        edges[j * 4 + 2] = FN / 2 + (w.left + w.width * (x + hw) - cx) * k;
+                        edges[j * 4 + 3] = FN / 2 + (w.top + w.height * (y + hh) - cy) * k;
+                    });
+                    shine(r, glare);
                 }
                 box.style.display = "block";
                 flood.style.opacity = a.toFixed(3);
