@@ -41,8 +41,8 @@ import PostList from "../components/PostList.astro";
         }
 
         /* ---- the cabin: a still picture until clicked -------------------------- */
-        /* One timeline drives everything after the click (see script): it sets
-           --win, --halo and --halo-s on the cabin, draws the flood, and at the
+        /* One timeline drives everything after the click (see script): it fades
+           the windows and the halo in, draws the flood, and at the
            moment the page is fully consumed swaps day for night underneath it.
            Clicking again runs the same timeline backwards. */
         :root {
@@ -99,7 +99,7 @@ import PostList from "../components/PostList.astro";
             inset: 0;
             mix-blend-mode: screen;
             pointer-events: none;
-            opacity: var(--win, 0);
+            opacity: 0;
             background:
                 radial-gradient(
                     10% 9% at 30.2% 61.4%,
@@ -127,17 +127,16 @@ import PostList from "../components/PostList.astro";
                     transparent 70%
                 );
         }
-        /* glow that bleeds from the cabin onto the page */
-        .cabin::before {
-            content: "";
+        /* glow that bleeds from the cabin onto the page. Only its opacity ever
+           changes, so it is painted once. */
+        .cabin .halo {
             position: absolute;
             inset: -55%;
             z-index: -1;
             pointer-events: none;
-            opacity: var(--halo, 0);
-            transform: scale(var(--halo-s, 1));
-            will-change: transform, opacity;
-            /* soft by its own falloff: a blur here is repainted every frame */
+            opacity: 0;
+            transform: scale(1.4);
+            will-change: opacity;
             background: radial-gradient(
                 closest-side,
                 color-mix(in srgb, var(--glow) 62%, transparent),
@@ -149,14 +148,20 @@ import PostList from "../components/PostList.astro";
         }
         /* the light that grows out of the windows until it has the whole page:
            a small canvas, stretched over the page by its transform, so that
-           growing it costs the phone nothing to repaint */
+           growing it costs the phone nothing to repaint. The box round it
+           only keeps it from making the page wider than the screen. */
         .flood {
             position: fixed;
-            left: 0;
-            top: 0;
+            inset: 0;
             z-index: 10;
+            overflow: hidden;
             pointer-events: none;
             display: none;
+        }
+        .flood canvas {
+            position: absolute;
+            left: 0;
+            top: 0;
             transform-origin: 0 0;
             will-change: transform, opacity;
         }
@@ -228,16 +233,21 @@ import PostList from "../components/PostList.astro";
         #far,
         #snow {
             position: fixed;
-            inset: 0;
+            left: 0;
+            top: 0;
             width: 100%;
-            height: 100%;
+            /* as tall as the screen ever gets, so a phone's toolbar sliding
+               away never resizes them */
+            height: 100vh;
+            height: 100lvh;
             pointer-events: none;
             display: none;
             z-index: -2;
         }
         /* painted small and stretched over the upper sky, which is what softens it */
         #aurora {
-            height: 80%;
+            height: 80vh;
+            height: 80lvh;
             opacity: 0.42;
         }
         #snow {
@@ -248,6 +258,9 @@ import PostList from "../components/PostList.astro";
         html.night #far,
         html.night #snow {
             display: block;
+        }
+        html.night .cabin .halo {
+            transform: scale(1.5);
         }
         html.night {
             color-scheme: dark;
@@ -273,6 +286,45 @@ import PostList from "../components/PostList.astro";
         }
         html.night .cabin .frame {
             box-shadow: none;
+        }
+        /* touch screens: a phone paints every blurred shadow on its processor, at
+           three times the pixels, so the glow is one small shadow and nothing
+           about it is animated; the pop is a nudge in size and the colour */
+        @media (hover: none) and (pointer: coarse) {
+            h1,
+            h2,
+            .titles a,
+            .projects h3 a {
+                transition: color 0.8s;
+            }
+            .lit {
+                text-shadow:
+                    0 0 0.12em #fff6,
+                    0 0 0.45em var(--glow);
+                animation-name: pop;
+            }
+            a.lit {
+                animation: none;
+            }
+            @keyframes pop {
+                35% {
+                    transform: scale(1.04);
+                }
+            }
+            /* Safari paints nothing fixed under its toolbar, only the page's own
+               background, so the sky darkens into that colour at the bottom
+               edge and there is no seam */
+            html.night::after {
+                content: "";
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                height: 22vh;
+                z-index: -1;
+                pointer-events: none;
+                background: linear-gradient(#03090d00, #03090dcc 62%, #03090d);
+            }
         }
         @media (prefers-reduced-motion: reduce) {
             .lit {
@@ -303,6 +355,13 @@ import PostList from "../components/PostList.astro";
             .cabin .frame {
                 transform: rotate(1.5deg);
             }
+            /* the glow keeps inside the page's width: anything wider lets the
+               page be dragged sideways */
+            .cabin .halo,
+            html.night .cabin .halo {
+                inset: -42% 0;
+                transform: none;
+            }
             /* the picture is square and the frame here is not, so it is cropped
                top and bottom: the windows overlay has to be the picture's size,
                not the frame's, or the light misses the windows */
@@ -330,7 +389,7 @@ import PostList from "../components/PostList.astro";
     <canvas id="aurora" width="200" height="110" aria-hidden="true"></canvas>
     <canvas id="far" aria-hidden="true"></canvas>
     <canvas id="snow" aria-hidden="true"></canvas>
-    <canvas class="flood" width="384" height="384" aria-hidden="true"></canvas>
+    <div class="flood" aria-hidden="true"><canvas width="384" height="384"></canvas></div>
 
     <div class="page">
     <main>
@@ -341,6 +400,7 @@ import PostList from "../components/PostList.astro";
             aria-label="Toggle night mode"
             title="Click me"
         >
+            <span class="halo"></span>
             <span class="frame">
                 <picture>
                     <source
@@ -485,7 +545,9 @@ import PostList from "../components/PostList.astro";
             const root = document.documentElement,
                 cabin = document.querySelector(".cabin"),
                 panes = cabin.querySelector(".windows"),
-                flood = document.querySelector(".flood");
+                halo = cabin.querySelector(".halo"),
+                box = document.querySelector(".flood"),
+                flood = box.firstElementChild;
             const titles = [
                 ...document.querySelectorAll(
                     "h1, h2, .titles a, .projects h3 a",
@@ -494,6 +556,8 @@ import PostList from "../components/PostList.astro";
             const still = matchMedia(
                 "(prefers-reduced-motion: reduce)",
             ).matches;
+            // phones and tablets draw canvases on the processor: give them fewer pixels
+            const coarse = matchMedia("(hover: none) and (pointer: coarse)").matches;
             const ease = (x) => x * x * (3 - 2 * x);
             const unit = (x) => Math.min(Math.max(x, 0), 1);
             const sheet = (w, h) =>
@@ -514,7 +578,9 @@ import PostList from "../components/PostList.astro";
                     d = 1,
                     flakes = [],
                     twinkle = [],
-                    live = false;
+                    live = false,
+                    made = "", // the screen the canvases were last made for
+                    beat = 0;
 
                 // the same forest and the same stars every time
                 const seeded = (a) => () => {
@@ -672,19 +738,34 @@ import PostList from "../components/PostList.astro";
                     f.globalAlpha = b.globalAlpha = 1;
                 };
 
-                const resize = () => {
-                    if (!live) return;
-                    d = Math.min(devicePixelRatio || 1, 2);
+                // The canvases are made for the tallest the screen gets and for
+                // its width; a toolbar sliding away changes neither, so the
+                // snow is not thrown away every time the page is scrolled.
+                const tall = () => {
+                    const probe = document.createElement("div");
+                    probe.style.cssText = "position:fixed;top:0;width:0;height:100lvh;visibility:hidden";
+                    document.body.append(probe);
+                    const h = probe.offsetHeight;
+                    probe.remove();
+                    return Math.max(h, innerHeight);
+                };
+                const fit = () => {
+                    const high = tall(),
+                        key = `${innerWidth}x${high}`;
+                    if (key === made) return;
+                    made = key;
+                    d = Math.min(devicePixelRatio || 1, coarse ? 1.5 : 2);
                     W = sky.width = far.width = front.width = Math.round(innerWidth * d);
-                    H = sky.height = far.height = front.height = Math.round(innerHeight * d);
+                    H = sky.height = far.height = front.height = Math.round(high * d);
                     paintSky();
-                    const want = Math.min(520, Math.round((innerWidth * innerHeight) / 3200));
+                    const want = Math.min(520, Math.round((innerWidth * high) / 3200));
                     flakes = Array.from({ length: want }, () => flake(false));
                 };
                 const draw = (now, dt) => {
                     if (!live) return;
                     const t = now / 1000;
-                    aurora(t);
+                    // the aurora drifts slowly enough to be drawn every other frame
+                    if (beat++ % 2 === 0) aurora(t);
                     b.clearRect(0, 0, W, H);
                     b.fillStyle = "#eaf6ff";
                     for (const s of twinkle) {
@@ -696,15 +777,20 @@ import PostList from "../components/PostList.astro";
                     snow(t, dt / 1000);
                 };
                 return {
+                    // made ahead of time, at the click, so that nothing has to be
+                    // built in the instant day turns to night
+                    ready: fit,
                     start() {
                         live = true;
-                        resize();
+                        beat = 0;
+                        fit();
                     },
                     stop() {
                         live = false;
-                        flakes = [];
                     },
-                    resize,
+                    resize() {
+                        if (made) fit();
+                    },
                     draw,
                 };
             })();
@@ -713,10 +799,14 @@ import PostList from "../components/PostList.astro";
             // level the cabin, then the windows light and the light keeps coming
             // out of them: small at first, then further and faster, without a
             // break, until it has the whole page; under it day is swapped for
-            // night, and it clears.
-            const LEVEL = 800,
-                SWAP = LEVEL + 10500,
-                TOTAL = SWAP + 2600,
+            // night, and it clears. The swell is the slow part, while there are
+            // titles left to catch; once the light has touched the far corner it
+            // takes the page in a burst, so the screen is never held blank.
+            const LEVEL = 700,
+                SWELL = 3400,
+                BURST = 420,
+                SWAP = LEVEL + SWELL + BURST,
+                TOTAL = SWAP + 650,
                 BACK = 1.5; // the way back is the same film, run a little faster
             let p = 0,
                 goal = 0,
@@ -754,9 +844,10 @@ import PostList from "../components/PostList.astro";
             // thins out the way a glow does, quickly at first and then for a
             // long way, and it goes from white at the window to green.
             const FALL = [
-                [0, 244, 255, 247, 1],
-                [CORE * 0.45, 196, 255, 214, 1],
-                [CORE, 112, 255, 152, 1],
+                [0, 236, 255, 242, 1],
+                [CORE * 0.2, 176, 255, 200, 1],
+                [CORE * 0.5, 120, 255, 158, 1],
+                [CORE, 104, 255, 146, 1],
                 [0.42, 96, 255, 140, 0.86],
                 [0.5, 84, 255, 132, 0.64],
                 [0.6, 72, 250, 124, 0.4],
@@ -776,11 +867,13 @@ import PostList from "../components/PostList.astro";
                 c.fillStyle = g;
                 c.fillRect(0, 0, 256, 256);
             }
+            if (coarse) flood.width = flood.height = 256;
             const FN = flood.width,
                 fc = flood.getContext("2d");
+            let drawn = "";
 
             const apply = () => {
-                const grown = unit((p - LEVEL) / (SWAP - LEVEL)), // the swell, 0 to 1
+                const ms = p - LEVEL, // how long the light has been on
                     night = p >= SWAP,
                     w = panes.getBoundingClientRect();
                 if (night !== dark) {
@@ -791,13 +884,8 @@ import PostList from "../components/PostList.astro";
                 root.classList.toggle("level", p > 0);
 
                 // the windows come on, with the glow round the cabin behind them
-                cabin.style.setProperty("--win", night ? 0 : ease(unit(grown / 0.1)));
-                cabin.style.setProperty("--halo", night ? 0.72 : 0.9 * ease(unit(grown / 0.4)));
-                // on a phone the cabin is as wide as the page, so its night glow stays closer in
-                cabin.style.setProperty(
-                    "--halo-s",
-                    night ? (innerWidth < 576 ? 1.05 : 1.5) : 1 + 1.1 * grown,
-                );
+                panes.style.opacity = night ? 0 : ease(unit(ms / 450)).toFixed(3);
+                halo.style.opacity = night ? 0.72 : (0.9 * ease(unit(ms / 1600))).toFixed(3);
 
                 // the flood: one pool of light on each window. They never stop
                 // growing; they run together, spread out of the cabin and cross
@@ -809,31 +897,45 @@ import PostList from "../components/PostList.astro";
                         Math.hypot(Math.max(cx, innerWidth - cx), Math.max(cy, innerHeight - cy)) +
                         w.width * 0.3,
                     small = w.width * 0.035,
-                    reach = small + (far / CORE - small) * Math.pow(grown, 3);
+                    // the swell carries the rim of the light to the far corner;
+                    // the burst carries the solid middle there, picking up at
+                    // the speed the swell left off
+                    u = unit(ms / SWELL),
+                    v = unit((ms - SWELL) / BURST),
+                    turn = (3 * BURST) / SWELL,
+                    reach =
+                        small +
+                        (far - small) * u * u * u +
+                        far * (turn * v + (1 / CORE - 1 - turn) * v * v);
                 titles.forEach((el, i) =>
-                    el.classList.toggle("lit", grown > 0 && reach * 1.15 >= away[i]),
+                    el.classList.toggle("lit", ms > 0 && reach * 1.15 >= away[i]),
                 );
-                const veil = night ? 1 - ease(unit((p - SWAP) / (TOTAL - SWAP))) : 1;
-                const a = ease(unit(grown / 0.08)) * veil;
+                // it clears quickly at first: night shows at once
+                const veil = night ? Math.pow(1 - unit((p - SWAP) / (TOTAL - SWAP)), 2) : 1;
+                const a = ease(unit(ms / 380)) * veil;
                 if (a < 0.004) {
-                    flood.style.display = "none";
+                    box.style.display = "none";
                     return;
                 }
                 // the canvas always holds just the square the pools fill, however
                 // large that square is on the page
                 const half = reach + w.width * 0.25,
                     k = FN / (2 * half),
-                    r = reach * k;
-                fc.clearRect(0, 0, FN, FN);
-                for (const [x, y] of PANES)
-                    fc.drawImage(
-                        pool,
-                        FN / 2 + (w.left + w.width * x - cx) * k - r,
-                        FN / 2 + (w.top + w.height * y - cy) * k - r,
-                        2 * r,
-                        2 * r,
-                    );
-                flood.style.display = "block";
+                    r = reach * k,
+                    key = `${reach.toFixed(1)} ${w.width.toFixed(1)}`;
+                if (key !== drawn) {
+                    drawn = key;
+                    fc.clearRect(0, 0, FN, FN);
+                    for (const [x, y] of PANES)
+                        fc.drawImage(
+                            pool,
+                            FN / 2 + (w.left + w.width * x - cx) * k - r,
+                            FN / 2 + (w.top + w.height * y - cy) * k - r,
+                            2 * r,
+                            2 * r,
+                        );
+                }
+                box.style.display = "block";
                 flood.style.opacity = a.toFixed(3);
                 flood.style.transform =
                     `translate(${(cx - half).toFixed(1)}px, ${(cy - half).toFixed(1)}px) scale(${(1 / k).toFixed(4)})`;
@@ -841,7 +943,8 @@ import PostList from "../components/PostList.astro";
 
             const frame = (now) => {
                 raf = 0;
-                const dt = Math.min(now - then, 50);
+                // a slow frame skips ahead rather than stretching the film
+                const dt = Math.min(now - then, 100);
                 then = now;
                 if (p !== goal) {
                     p = goal > p ? Math.min(goal, p + dt) : Math.max(goal, p - dt * BACK);
@@ -873,12 +976,43 @@ import PostList from "../components/PostList.astro";
             });
             cabin.addEventListener("click", () => {
                 cabin.blur();
-                if (p === 0) measure();
+                if (p === 0) {
+                    measure();
+                    scene.ready();
+                }
                 on = !on;
                 goal = on ? TOTAL : 0;
                 cabin.setAttribute("aria-pressed", String(on));
                 still ? jump() : wake();
             });
+
+            // ?fps on the address shows how the frames are going, for a phone
+            // that cannot be asked any other way
+            if (location.search.includes("fps")) {
+                const meter = document.body.appendChild(document.createElement("pre"));
+                meter.style.cssText =
+                    "position:fixed;left:6px;top:6px;z-index:99;margin:0;padding:4px 6px;" +
+                    "font:11px/1.3 monospace;background:#000c;color:#0f0;pointer-events:none";
+                let n = 0,
+                    worst = 0,
+                    since = performance.now(),
+                    last = since;
+                const count = (now) => {
+                    n++;
+                    worst = Math.max(worst, now - last);
+                    last = now;
+                    if (now - since >= 1000) {
+                        const part = p === 0 ? "day" : p < SWAP ? "swell" : p < TOTAL ? "clearing" : "night";
+                        meter.textContent =
+                            `${n} fps, worst ${worst.toFixed(0)} ms\n` +
+                            `${part} ${innerWidth}x${innerHeight} @${devicePixelRatio}`;
+                        n = worst = 0;
+                        since = now;
+                    }
+                    requestAnimationFrame(count);
+                };
+                requestAnimationFrame(count);
+            }
         })();
     </script>
 </Base>
